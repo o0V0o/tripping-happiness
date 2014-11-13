@@ -23,6 +23,9 @@ function Camera:perspective(near, far, fov)
 	self:recalculate()
 	return self
 end
+function Camera:ortho()
+	self.perspective = Matrix.identity(4)
+end
 --function Camera:recalculate() Recalculates the camera's perspective projection matrix, called after setting near,far or fov using associated setters
 function Camera:recalculate()
 	local x,y

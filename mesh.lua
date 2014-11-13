@@ -348,6 +348,7 @@ function Mesh:translate(v)
 	return self.transform:translate(v)
 end
 function Mesh:scale(s)
+print("RCALEING")
 	return self.transform:scale(s)
 end
 function Mesh:rotate(...)
