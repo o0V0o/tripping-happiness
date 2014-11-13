@@ -1,7 +1,8 @@
-local O = require("object")
-local V = require("vector")
-local Matrix = require("matrix")
-local types = require("types")
+local libname = "drawlib."
+local O = require(libname.."object")
+local V = require(libname.."vector")
+local Matrix = require(libname.."matrix")
+local types = require(libname.."types")
 
 function map(list, func)
 	for k,v in ipairs(list) do
@@ -18,6 +19,125 @@ function split(p, pattern)
 end
 
 local M = {}
+
+--[[
+--function convexMesh(verts) return Mesh
+-- create a convex hull mesh from these vertices.
+function convexMesh(pts)
+	local verts, ind, normals = {},{},{}
+	if #pts < 3 then assert("can't build hull out of 3 points!") end
+
+	local ptsCH, indCH = initialSimplex(pts)
+
+	while true do
+	end
+end
+
+function nextPoint(...)
+	for each face do
+		for each pt in conflict do
+		end
+	end
+end
+
+function initialSimplex(pts)
+	assert( #pts >=3, "Not enough points to create a 3Dimensional simplex!" )
+	-- find AABB and intersecting points.
+	local maxima = {{},{},{}}
+	local minima = {{},{},{}}
+	local boundries = {}
+	local max = {}
+	local min = {}
+	local swizzletable = {"x", "y", "z"}
+	-- find the min/max points in each dimension
+	for p in pairs(pts) do
+		for i=1,3 do
+			local DIM = swizzletable[i]
+			if not min[i] or p[DIM] < min[i][DIM] then min[i] = p end
+			if not max[i] or p[DIM] > max[i][DIM] then max[i] = p end
+		end
+	end
+
+	--now accumulate all points that lie on the min/max boundry for each dimension
+	local function close(p1, p2)
+		return distance(p1,p2) < EPSILON
+	end
+	for p in pairs(pts) do
+		for i=1,3 do
+			local DIM = swizzletable[i]
+			if close(p[DIM], max[i][DIM]) then table.insert(maxima[i], p);table.insert(boundries, p) end
+			if close(p[DIM], min[i][DIM]) then table.insert(minima[i], p);table.insert(boundries, p) end
+		end
+	end
+	-- lets check for coincident/colinear/coplanar points.
+	local dist = {}
+	local dimension = 3
+	local maxdim = nil
+	for i=1,3 do
+		dist[i] = max[i]-min[i]
+		if not maxdim or dist[i]>maxdim then maxdim = dist[i] end
+		if dist[i] < EPSILON then dimension = dimension - 1 end -- test if this dimension has any real dimension to it.
+	end
+	function coincidence(dim)
+		if dim==0 then return "coincident" end
+		if dim==1 then return "colinear" end
+		if dim==2 then return "coplanar" end
+		return "?"
+	end
+	assert( dimension == 3, "Invalid input for convex hull! points are " .. coincidence(dimension))
+	
+	-- take the min & max from the largest dimension
+	function distance(pt, pts)
+		if pts.type = V.Vector then
+			return distancePtPt(pt,pts)
+		elseif #pts==2 then
+			return distancePtLine(pt,pts[0],pts[1])
+		elseif #pts==3 then
+			return distancePtPlane(pt,pts[0],pts[1],pts[2])
+		else
+			error("Unable to find distance with "..#pts.." dimensional object")
+		end
+	end
+	function distancePtPt(p1,p2)
+		return (p2-p1):magnitude()
+	end
+	function distancePtLine(pt, ro, rd)
+		-- taken from http://onlinemschool.com/math/library/analytic_geometry/p_line/
+		return math.abs(  (p-ro):cross(rd) / rd:magnitude()  )
+	end
+	function distancePtPlane(pa, pb, n)
+		-- taken from http://paulbourke.net/geometry/pointlineplane/
+		local D = -1 * (n.x*pb.x + n.y*pb.y + n.z+pb.z)
+		return (n.x*pa.x + n.y*pa.y + n.z*pa.z + D) / n:magnitude()
+	end
+	local ptsCh maxdist maxP1 maxP2 = {},0
+	error("Need to define point-line distance")
+	--lets find the first 2 points...
+	for _,p1 in pairs(boundries) do
+		for _,p2 in pairs(boundries) do
+			if distance(p1,p2) > maxDist then 
+				maxDist = distance(p1,p2)
+				maxP1 = p1
+				maxP2 = p2
+			end
+		end
+	end
+	table.insert(ptsCH, maxP1)
+	table.insert(ptsCH, maxP2)
+	-- now find and add the remaining 2 points
+	for _ = 3,4 do
+		for p in pairs(boudries) do
+			if not table.elememt(ptsCH, p) and (maxp == nil or distance(p, ptsCH) > maxdist) then --use the magic distance function to calculate pt-line and pt-plane distances
+				maxp = p
+				maxdist = distance(p, line)
+			end
+		end
+		table.insert(ptsCH, maxp)
+	end
+	indCH = {1,2,3,1,2,4,2,3,4,1,3,4}
+	return ptsCh, indCh
+end
+--]]
 
 --function meshanize(verts, VertInds, ...) return Mesh
 -- Create a mesh from vertices and attributes, where each attribute has its own element index array.
@@ -172,6 +292,7 @@ function M.load(fname)
 	ext = ext:upper()
 	print(fname,name,ext)
 	local file = io.open(fname)
+	assert(file, "Could not open file:" .. fname)
 	local content = file:read("*all")
 	file:close()
 	if loaders[ext] then return loaders[ext](content) end
@@ -203,17 +324,34 @@ function Mesh:attributeDefault(name, default)
 	end
 	self.attributes[name] = newAttrib
 end
+function Mesh:linkTo( mesh )
+	self.verts = mesh.verts
+	self.ind = mesh.ind
+	self.attributes = mesh.attributes
+	self.transform = mesh.transform
+	return self
+end
+function Mesh:copyFrom( mesh )
+	self.verts = {}
+	for k,v in pairs(mesh.verts) do self.verts[k] = v:copy() end
+	self.ind = {}
+	for k,v in pairs(mesh.ind) do self.ind[k] = v:copy() end
+	self.attributes = {}
+	for k,v in pairs(mesh.attributes) do self.attributes[k] = v:copy() end
+	self.transform = mesh.transform:copy()
+	return self
+end
 function Mesh:reset()
 	self.transform = Matrix.identity(4)
 end
 function Mesh:translate(v)
-	self.transform:translate(v)
+	return self.transform:translate(v)
 end
 function Mesh:scale(s)
-	self.transform:scale(s)
+	return self.transform:scale(s)
 end
 function Mesh:rotate(...)
-	self.transform:rotate(...)
+	return self.transform:rotate(...)
 end
 function Mesh:__tostring()
 	local str = {}

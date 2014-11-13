@@ -1,4 +1,5 @@
-local O = require("object")
+local libname = "drawlib."
+local O = require(libname.."object")
 local ffi = require("ffi")
 
 local V = {}

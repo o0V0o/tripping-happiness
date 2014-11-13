@@ -1,5 +1,6 @@
 local ffi = require("ffi")
-local O = require("object")
+local libname = "drawlib."
+local O = require(libname.."object")
 
 local M = {}
 
@@ -90,9 +91,13 @@ function Matrix:scale(v)
 	end
 	return self:transform(scale)
 end
-function Matrix:rotate(axis, angle)
+function Matrix:rotate(axis, angle, origin)
 	local rot = M.rotate(axis, angle)
-	return self:transform(rot)
+	if origin then
+		return self:tranlate(-origin):transform(rot):translate(origin)
+	else
+		return self:transform(rot)
+	end
 end
 
 function M.skew(v)

@@ -1,15 +1,19 @@
--- matrix/vector and quaternion implementations: https://github.com/Wiladams/TINN/tree/master/src/graphics
+-- matrix/vector and quaternion implementations: https://github.com/Wiladams/TINN/tree/master/src/graphicsZ
 
 -- load opengl
 local ffi = require("ffi")
 local gl = require("ffi/openGL")
 local glfw = require("ffi/glfw")
 -- load my code :D
-local O = require("object")
-local S = require("shaders")
-local V = require("vector")
-local Matrix = require("matrix")
-local Camera = require("camera")
+local libname = "drawlib."
+local O = require(libname.."object")
+local S = require(libname.."shaders")
+
+local V = require(libname.."vector")
+local Matrix = require(libname.."matrix")
+local Camera = require(libname.."camera")
+local Mesh = require(libname.."mesh")
+
 
 local G = {}
 
@@ -23,6 +27,9 @@ local Window = O.class()
 
 -- export classes
 G.Camera = Camera
+G.Mesh = Mesh
+G.Vector = V
+G.Matrix = Matrix
 
 -- globals
 local shaderList = {}
@@ -51,6 +58,10 @@ function G.init()
 	--glfw.glfwWindowHint( glfw.GLFW_CONTEXT_VERSION_MINOR, 3)
 	--glfw.glfwWindowHint( glfw.GLFW_OPENGL_FORWARD_COMPAT, gl.GL_TRUE)
 	--glfw.glfwWindowHint( glfw.GLFW_OPENGL_PROFILE, glfw.GLFW_OPENGL_CORE_PROFILE)
+end
+
+function G.time()
+	return glfw.glfwGetTime()
 end
 
 function G.useCamera(cam)
@@ -134,6 +145,11 @@ function G.Shader:destroy()
 		self.eab:destroy()
 		self.vao:destroy()
 end
+function G.uniform(shader, name, value)
+	local prog = shader.prog
+	local location = gl.glGetUniformLocation(prog, name)
+	gl.glUniform1f(location, value)
+end
 function G.draw3D(shader)
 	-- draw all 3D meshes with the given shader program
 	local prog = shader.prog
@@ -151,16 +167,18 @@ function G.draw3D(shader)
 		local attributes = {}
 		for _,attribName in ipairs(shader.attributes) do
 			local buffer = mesh.attributes[attribName] or DefaultTable(function() return vec1(0) end)
-			print("attrib:", attribName, buffer, buffer[1])
 			table.insert(attributes, buffer)
 		end
 
 
 		print2 = function(i) print(":", i) return i end
+
+		--[[
 		print("ind:"); map(ind, print2)
 		print("pos:"); map(attributes[1], print2)
 		print("norm:"); map(attributes[2], print2)
 		print("color:"); map(attributes[3], print2)
+		--]]
 
 		gl.glUniformMatrix4fv(mvpLocation, 1, gl.GL_FALSE, transform.usrdata)
 		-- buffer and send points
@@ -429,8 +447,6 @@ function VBO:bufferData(data, datatype, target, hints)
 	target = target or self.target or gl.GL_ARRAY_BUFFER
 	hints = hints or self.hints or gl.GL_DYNAMIC_DRAW
 	self:bind(target)
-	print("bufferind", target, ffi.sizeof(data), data, hints)
-	print("VA=", gl.GL_ARRAY_BUFFER, "EA", gl.GL_ELEMENT_ARRAY_BUFFER)
 	gl.glBufferData( target, ffi.sizeof(data), data, hints)
 	self:unbind(target)
 	self.data = data -- keep a reference to data to prevent GC
@@ -455,7 +471,6 @@ function VBO:bufferPoints( ... )
 	--]]
 	
 	--print("data size:", nPts, self.dim, nPts*self.dim)
-	print("VBO:", self.datatype, glTypes[self.datatype], nPts*self.dim)
 	local data = ffi.new(glTypes[self.datatype].."[?]", nPts*self.dim) -- allocate data
 	local n = 0
 	for j = 1,nPts do
