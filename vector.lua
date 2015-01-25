@@ -3,11 +3,7 @@ local O = require(libname.."object")
 local ffi = require("ffi")
 
 local V = {}
-
-
---local Vector = {}
---Vector.__index = Vector
-local Vector = O.class()
+local Vector = O.class(nil, function(self, key) return self:swizzle(key) end)
 
 function V.vec1(x) if type(x)=="number" then return Vector(1,x or 0) else return V.Vector(1,x) end end
 function V.vec2(x,y) if type(x)=="number" and type(y)=="number" then return Vector(2,x,y) else return V.Vector(2,x,y) end end
@@ -18,35 +14,30 @@ function V.Vector(dim,...)
 	local args = {...}
 	local params = {}
 	local i=1
-	while i<=dim do
+	while #params<dim do
 		local n = args[i]
 		if type(n) == "nil" then
 			table.insert(params, 0)
-			i = i + 1
-		elseif type(n) == number then
+		elseif type(n) == "number" then
 			table.insert(params, n)
-			i = i + 1
 		elseif n.dim==1 then
 			table.insert(params, n.usrdata[0])
-			i = i + 1
 		elseif n.dim==2 then
 			table.insert(params, n.usrdata[0])
 			table.insert(params, n.usrdata[1])
-			i = i + 2
 		elseif n.dim==3 then
 			table.insert(params, n.usrdata[0])
 			table.insert(params, n.usrdata[1])
 			table.insert(params, n.usrdata[2])
-			i = i + 3
 		elseif n.dim==4 then
 			table.insert(params, n.usrdata[0])
 			table.insert(params, n.usrdata[1])
 			table.insert(params, n.usrdata[2])
 			table.insert(params, n.usrdata[3])
-			i = i + 4
 		else
 			error("unknown types in Vector constructor")
 		end
+		i = i + 1
 	end
 	assert(#params==dim, "incompatible types in Vector constructor")
 	return Vector(dim, unpack(params) )
@@ -56,6 +47,7 @@ function Vector.__init(self,dim, ...)
 	local usrdata = ffi.new("float[?]", dim, ...)
 	self.usrdata = usrdata
 	self.dim = dim
+	self.super = V.Vector
 	--return setmetatable({usrdata=usrdata, dim=dim}, Vector)
 end
 
@@ -133,6 +125,17 @@ function Vector:normalize()
 		usrdata[i] = usrdata[i]/len
 	end
 	return self
+end
+
+function Vector:swizzle(str)
+	swizzletable = { x=0, r=0, y=1, g=1, z=2, b=2, w=3 }
+	local usrdata = self.usrdata
+	values = {}
+	for c in str:gmatch(".") do
+		table.insert(values, usrdata[ swizzletable[c] ] )
+	end
+	if #values == 1 then return values[1] end -- return a single number, not a vec1
+	return Vector( #values, table.unpack( values ) )
 end
 
 function Vector:copy()

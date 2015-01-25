@@ -4,6 +4,9 @@ local V = require(libname.."vector")
 local Matrix = require(libname.."matrix")
 local types = require(libname.."types")
 
+
+local M = {}
+
 function map(list, func)
 	for k,v in ipairs(list) do
 		list[k] = func(v)
@@ -18,133 +21,287 @@ function split(p, pattern)
 	return t
 end
 
-local M = {}
+function distancePtPt(p1,p2)
+	return (p2-p1):len()
+end
+function distancePtLine(pt, ro, rd)
+	-- taken from http://onlinemschool.com/math/library/analytic_geometry/p_line/
+	print(pt, ro, rd)
+	return math.abs(  (pt-ro):cross(rd):len() / rd:len()  )
+end
+function distancePtPlane(pa, pb, n)
+	-- taken from http://paulbourke.net/geometry/pointlineplane/
+	local D = -1 * (n.x*pb.x + n.y*pb.y + n.z+pb.z)
+	local dist = math.abs((n.x*pa.x + n.y*pa.y + n.z*pa.z + D) / n:len())
+	print("Pt-Plane:", pa,pb,n,dist)
+	return dist
+end
+function distance(pt, pts)
+	if pts.super == V.Vector then
+		return distancePtPt(pt,pts)
+	elseif #pts==2 then
+		print("pt-Line:", pts[1], pts[2])
+		return distancePtLine(pt,pts[1],pts[2]-pts[1])
+	elseif #pts==3 then
+		print("pt-Plane:", pts[1], pts[2], pts[3])
+		return distancePtPlane(pt,pts[1], (pts[1]-pts[2]):cross(pts[3]-pts[2]))
+	else
+		error("Unable to find distance with "..#pts.." dimensional object")
+	end
+end
 
---[[
---function convexMesh(verts) return Mesh
+--function convexMesh([vec3]) return Mesh
 -- create a convex hull mesh from these vertices.
-function convexMesh(pts)
+function M.convexHull(pts)
 	local verts, ind, normals = {},{},{}
-	if #pts < 3 then assert("can't build hull out of 3 points!") end
 
-	local ptsCH, indCH = initialSimplex(pts)
+	local faces, ptsCH, indCH = initialSimplex(pts)
 
-	while true do
-	end
-end
-
-function nextPoint(...)
-	for each face do
-		for each pt in conflict do
-		end
-	end
-end
-
-function initialSimplex(pts)
-	assert( #pts >=3, "Not enough points to create a 3Dimensional simplex!" )
-	-- find AABB and intersecting points.
-	local maxima = {{},{},{}}
-	local minima = {{},{},{}}
-	local boundries = {}
-	local max = {}
-	local min = {}
-	local swizzletable = {"x", "y", "z"}
-	-- find the min/max points in each dimension
-	for p in pairs(pts) do
-		for i=1,3 do
-			local DIM = swizzletable[i]
-			if not min[i] or p[DIM] < min[i][DIM] then min[i] = p end
-			if not max[i] or p[DIM] > max[i][DIM] then max[i] = p end
-		end
-	end
-
-	--now accumulate all points that lie on the min/max boundry for each dimension
-	local function close(p1, p2)
-		return distance(p1,p2) < EPSILON
-	end
-	for p in pairs(pts) do
-		for i=1,3 do
-			local DIM = swizzletable[i]
-			if close(p[DIM], max[i][DIM]) then table.insert(maxima[i], p);table.insert(boundries, p) end
-			if close(p[DIM], min[i][DIM]) then table.insert(minima[i], p);table.insert(boundries, p) end
-		end
-	end
-	-- lets check for coincident/colinear/coplanar points.
-	local dist = {}
-	local dimension = 3
-	local maxdim = nil
-	for i=1,3 do
-		dist[i] = max[i]-min[i]
-		if not maxdim or dist[i]>maxdim then maxdim = dist[i] end
-		if dist[i] < EPSILON then dimension = dimension - 1 end -- test if this dimension has any real dimension to it.
-	end
-	function coincidence(dim)
-		if dim==0 then return "coincident" end
-		if dim==1 then return "colinear" end
-		if dim==2 then return "coplanar" end
-		return "?"
-	end
-	assert( dimension == 3, "Invalid input for convex hull! points are " .. coincidence(dimension))
 	
-	-- take the min & max from the largest dimension
-	function distance(pt, pts)
-		if pts.type = V.Vector then
-			return distancePtPt(pt,pts)
-		elseif #pts==2 then
-			return distancePtLine(pt,pts[0],pts[1])
-		elseif #pts==3 then
-			return distancePtPlane(pt,pts[0],pts[1],pts[2])
-		else
-			error("Unable to find distance with "..#pts.." dimensional object")
-		end
+	local pt
+	
+	--local normals, normInds = M.normalize(ptsCH, indCH)
+
+
+	--map( ptsCH, function(pt) return V.Vector(4, pt, 1) end) -- meshes need vec4 matrix math
+	--return M.meshanize(ptsCH, indCH, "normal",normals, normInds)
+end
+
+local Hull = O.class()
+function Hull:__init( pts )
+	self:initialSimplex()
+end
+function Hull:calculate()
+	while true do
+		pt,face = self:nextPt()
+		if not pt then break end
+		self:addPt(face, pt)
 	end
-	function distancePtPt(p1,p2)
-		return (p2-p1):magnitude()
+end
+function Hull:addPt(face,pt)
+	local horizon = {}
+	self:horizonTest(face, pt, horizon)
+
+	for _, face in pairs(horizon) do
+		-- make a triangle from each edge of the horizon to the new pt
+		
 	end
-	function distancePtLine(pt, ro, rd)
-		-- taken from http://onlinemschool.com/math/library/analytic_geometry/p_line/
-		return math.abs(  (p-ro):cross(rd) / rd:magnitude()  )
-	end
-	function distancePtPlane(pa, pb, n)
-		-- taken from http://paulbourke.net/geometry/pointlineplane/
-		local D = -1 * (n.x*pb.x + n.y*pb.y + n.z+pb.z)
-		return (n.x*pa.x + n.y*pa.y + n.z*pa.z + D) / n:magnitude()
-	end
-	local ptsCh maxdist maxP1 maxP2 = {},0
-	error("Need to define point-line distance")
-	--lets find the first 2 points...
-	for _,p1 in pairs(boundries) do
-		for _,p2 in pairs(boundries) do
-			if distance(p1,p2) > maxDist then 
-				maxDist = distance(p1,p2)
-				maxP1 = p1
-				maxP2 = p2
+	return faces
+end
+function Hull:nextPt()
+	local maxPt, maxFace, maxDist = nil, nil, 0
+	for _, face in pairs( self.faces) do
+		for pt in pairs(face.conflict) do
+			local dist = distancePtPlane(pt, face.pt, face.normal)
+			if dist > maxDist then
+				maxPt=pt
+				maxDist = dist
+				maxFace = face
 			end
 		end
 	end
-	table.insert(ptsCH, maxP1)
-	table.insert(ptsCH, maxP2)
+	return maxPt, maxFace
+end
+function Hull:horizonTest(face, pt, horizon)
+	if not self:visible( pt ) then return --escape condition
+	else table.insert(horizon, face) end
+
+	for face in pairs(self.faceGraph[face]) do
+		self:horizonTest(face, pt, horizon)
+	end
+end
+
+local Triangle = O.class()
+function Triangle:__init(pts)
+	for i,pt in ipairs(pts) do
+		self[i] = pt
+	end
+end
+
+local Face = O.class()
+--[[
+function Face:__init(triangles)
+	self.triangles = triangles
+	local pt1 = triangles[1][1]
+	local pt2 = triangles[1][2]
+	local pt3 = triangles[1][3] 
+	self.normal = (pt1-pt2):cross(pt3-pt2)
+	self.pt = pt1
+	self.edges = ...
+	self.neighbors = ... 
+	self.conflict = {}
+	print("Face:", self.normal, self.pt )
+end
+--]]
+function Face:__init(edges)
+	self.edges = edges
+end
+function Face:visible(pt)
+	return true
+end
+
+
+local EPSILON = .05
+
+function Hull:initialSimplex()
+	local pts = self.pts
+	assert( #pts >=3, "Not enough points to create a 3Dimensional simplex!" )
+	-- find AABB and intersecting points.
+	local min, max, boundries, ptsCH = {}, {}, {}, {}
+	local swizzletable = {"x", "y", "z"}
+
+	-- find the min/max points in each dimension
+	for _,p in pairs(pts) do
+		for i=1,3 do
+			local DIM = swizzletable[i]
+			print(DIM, p[DIM], min[i], i)
+			if not min[i] or p[DIM] < min[i][DIM] then min[i] = p;table.insert(boundries, p) end
+			if not max[i] or p[DIM] > max[i][DIM] then max[i] = p;table.insert(boundries, p) end
+		end
+	end
+
+	-- lets check for coincident/colinear/coplanar point sets.
+	--  NYI
+	
+	-- take the min & max from the largest dimension
+	local ptsCh, maxDist, maxP1, maxP2 = {},0
+	--lets find the first 2 points... (may be on the same boundry plane)
+	for _,p1 in pairs(boundries) do
+		for _,p2 in pairs(boundries) do
+			if distance(p1,p2) > maxDist then 
+				maxDist = distance(p1,p2); maxP1 = p1; maxP2 = p2
+			end
+		end
+	end
+	table.insert(ptsCH, maxP1); table.insert(ptsCH, maxP2)
+
 	-- now find and add the remaining 2 points
 	for _ = 3,4 do
-		for p in pairs(boudries) do
-			if not table.elememt(ptsCH, p) and (maxp == nil or distance(p, ptsCH) > maxdist) then --use the magic distance function to calculate pt-line and pt-plane distances
+		maxDist = 0
+		for _,p in pairs(boundries) do
+			if (maxp == nil or distance(p, ptsCH) > maxDist) then --use the magic distance function to calculate pt-line and pt-plane distances
 				maxp = p
-				maxdist = distance(p, line)
+				maxDist = distance(p, ptsCH)
 			end
 		end
 		table.insert(ptsCH, maxp)
 	end
-	indCH = {1,2,3,1,2,4,2,3,4,1,3,4}
-	return ptsCh, indCh
-end
---]]
+	indCH = {1,2,3,4,2,1,4,3,2,1,3,4}
+	local faces = asHalfEdges( ptsCH, indCH )
 
---function meshanize(verts, VertInds, ...) return Mesh
+
+	-- make a Face object for each triangle
+	faces = {}
+	table.insert(self.faces, Face( {Triangle{ptsCH[1],ptsCH[2],ptsCH[3]}} ))
+	table.insert(self.faces, Face( {Triangle{ptsCH[4],ptsCH[2],ptsCH[1]}} ))
+	table.insert(self.faces, Face( {Triangle{ptsCH[4],ptsCH[3],ptsCH[2]}} ))
+	table.insert(self.faces, Face( {Triangle{ptsCH[1],ptsCH[3],ptsCH[4]}} ))
+
+	assignConflict(self)
+
+	return self
+end
+
+local function Edge(edges, pt1, pt2)
+	local self, twin
+	-- test if this edge or its twin already exist
+	if edges[pt1][pt2] then
+		self = edges[pt1][pt2]
+		twin = edges[pt2][pt1]
+	else
+		self, twin = {}, {}
+		self.tail = pt1
+		twin.tail = pt2
+		self.twin = twin
+		twin.twin = self
+		if not edges[pt1] then edges[pt1]={} end
+		if not edges[pt2] then edges[pt2]={} end
+		edges[pt1][pt2] = self
+		edges[pt2][pt1] = twin
+	end
+	return self
+end
+local function asHalfEdges( pts, ind )
+	local edges, faces = {}, {} 
+	for i = 1, #ind, 3 do
+		local p1,p2,p3 = pts[ind[i]], pts[ind[i+1]], pts[ind[i+2]]
+		local e1 = Edge(edges,p1, p2)
+		local e2 = Edge(edges,p2, p3)
+		local e3 = Edge(edges,p3, p1)
+		e1.next = e2; e1.prev = e3
+		e2.next = e3; e2.prev = e1
+		e3.next = e1; e3.prev = e2
+		table.insert(faces, Face( {e1,e2,e3} ))
+	end
+	return faces
+end
+local function asMesh( faces )
+	local face = faces[1] -- start somewhere...
+
+end
+local function asMeshRecursion(edge)
+	local nextEdge
+	while nextEdge~=edge do
+		asMeshRecursion( edge.twin )
+		nextEdge = edge.next
+	end
+end
+
+local function assignConflict(self)
+	local faces, pts = self.faces, self.pts
+	assert(#faces>0, "can't assign conflict points without any faces")
+	for pt in pairs( pts ) do
+		-- find the closest face
+		local minDist, closestFace = nil, nil
+		for face in pairs( faces ) do
+			if testSidedness(face, pt) then -- if point on the outside of this face
+				local dist = distancePtPlane(pt, face.pt, face.normal )
+				if not minDist or dist<minDist then minDist = dist; closestFace = face end
+				--table.insert( self.ptVisibility[pt], face )
+				--self.ptVisibility:add(pt, face) -- doubly linked hash table
+			end
+		end
+		if closestFace then
+			table.insert( closestFace.conflict, pt )
+		else
+			-- this face is not on the hull. forget about it.
+		end
+	end
+end
+
+--function M.normalize(verts, VertInds) return [vec3], [Int] a list of normal values
+--for each **face**, and an element index array for each vertex in vertInds
+function M.normalize(verts, vertInds)
+	local normals, normInds = {}, {}
+
+	local i=1
+	while i <= #vertInds-2 do
+		print(i,"/", #vertInds)
+		local p1 = verts[ vertInds[i]]
+		local p2 = verts[ vertInds[i+1]]
+		local p3 = verts[ vertInds[i+2]]
+		local normal = (p2-p3):cross(p1-p3)
+		table.insert(normals, normal)
+		table.insert(normInds, #normals)
+		table.insert(normInds, #normals)
+		table.insert(normInds, #normals)
+		print(p1,p2,p3,normal)
+		i = i + 3
+	end
+	return normals, normInds
+end
+--function M.meshanize(verts, VertInds, ...) return Mesh
 -- Create a mesh from vertices and attributes, where each attribute has its own element index array.
 -- example call: meshanizer(vertexArray, vertexElementIndexArray, "normal", normalArray, normalElementArray, "texcoord", texcoordArray, texcoordElementArray)
 --
-local function meshanize(verts, vertInds, ...)
+function M.meshanize(verts, vertInds, ...)
 	print("meshanizing:",verts, vertInds, ...)
+	for k,v in ipairs(verts) do
+		print("verts:", k, v)
+	end
+	for k,v in ipairs(vertInds) do
+		print("inds:", k, v)
+	end
 	local args = {...}
 	local attribNames = {}
 	local attribBuffers = {}
@@ -161,12 +318,17 @@ local function meshanize(verts, vertInds, ...)
 			for i,ind in ipairs({...}) do
 				table.insert(meshAttributes[attribNames[i]], attribBuffers[i][ind])
 			end
-			return #meshVerts
+			print("new mesh vert:", #meshVerts)
+			return #meshVerts-1
 	end
 
+	-- get the real index of the point matching all the specified index values.
+	-- If a vertex does not already exist that matches these indeces, then make
+	-- one.
 	local function indexOf(vertInd, ...)
 		assert(vertInd)
 		local args = {...}
+		if #args == 0 then meshIndTransform[vertInd] = addMeshVert( vertInd, ...) end
 		if not meshIndTransform[vertInd] then meshIndTransform[vertInd]={} end
 		local t = meshIndTransform[vertInd]
 		for i, ind in ipairs(args) do
@@ -189,7 +351,6 @@ local function meshanize(verts, vertInds, ...)
 		attribBuffers[#attribNames]=pts
 		attribInds[#attribNames]=ind
 		meshAttributes[name] = {}
-		print("meshanizing:",i, name, #attribNames)
 	end
 	for i,vertInd in ipairs(vertInds) do
 		local t = {}
@@ -198,6 +359,7 @@ local function meshanize(verts, vertInds, ...)
 		end
 		table.insert(meshInds, indexOf(vertInd, unpack(t)))
 	end
+	print("Making Mesh:", table.unpack(meshInds))
 	return Mesh(meshVerts, meshInds, meshAttributes)
 end
 
@@ -282,8 +444,27 @@ loaders["OBJ"] = function(content)
 	end
 	print("normals#", #normals)
 	print("texcoords#", #texcoords)
-	local mesh = meshanize(verts, vertInds, "texcoord", texcoords, texInds, "normal", normals, normInds)
-	map( mesh.ind, function(i) return i-1 end) --map from 1-based to 0-based indexing.
+	local args = {}
+	table.insert(args, verts)
+	table.insert(args, vertInds)
+	if #texcoords > 0 then
+		table.insert(args, "texcoord")
+		table.insert(args, texcoords)
+		table.insert(args, texInds)
+	end
+	if #normals > 0 then
+		table.insert(args, "normal")
+		table.insert(args, normals)
+		table.insert(args, normInds)
+	end
+	for k,v in ipairs(args) do
+		print(k,v)
+	end
+	print( table.unpack(args))
+	local mesh = M.meshanize(table.unpack( args))
+	local mesh = M.meshanize(verts, vertInds, "texcoord", texcoords, texInds, "normal", normals, normalInds)
+	local mesh = M.meshanize(verts, vertInds, "blah", {}, normInds)
+	local mesh = M.meshanize(verts, vertInds) 
 	return mesh
 end
 function M.load(fname)
@@ -300,7 +481,7 @@ function M.load(fname)
 end
 
 Mesh = O.class()
---constructor Mesh([Vector] vertArray, [Int] elementIndexArray, Table attributes) return Mesh
+--constructor Mesh([Vector] vertArray, [Int] elementIndexArray, Table attributes) 
 --return Mesh a new Mesh object with the given vertices, that form faces as described in the *elementIndexArray*
 --The constructed Mesh object has a set of attributes, such as normals, texure coordinates, etc, that can be passed 
 --as a table in the following format:
@@ -348,7 +529,6 @@ function Mesh:translate(v)
 	return self.transform:translate(v)
 end
 function Mesh:scale(s)
-print("RCALEING")
 	return self.transform:scale(s)
 end
 function Mesh:rotate(...)
@@ -361,13 +541,12 @@ function Mesh:__tostring()
 	table.insert(str, "\t")
 	table.insert(str, "vertex")
 	for name,_ in pairs(self.attributes) do
-		print(name, _)
 		table.insert(str, "\t")
-		name = "..."
 		table.insert(str, name)
 	end
 	table.insert(str, "\n")
 	for _,i in ipairs(self.ind) do
+		i=i+1
 		table.insert(str, tostring(i))
 		table.insert(str, "\t")
 		table.insert(str, tostring(self.verts[i]) )

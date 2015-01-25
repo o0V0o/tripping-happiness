@@ -5,14 +5,15 @@ local ffi = require("ffi")
 local gl = require("ffi/openGL")
 local glfw = require("ffi/glfw")
 -- load my code :D
-local libname = "drawlib."
-local O = require(libname.."object")
-local S = require(libname.."shaders")
+--local LIBPATH = "drawlib."
+local LIBPATH = select('1', ...):match(".+%.") or ""
+local O = require(LIBPATH.."object")
+local S = require(LIBPATH.."shaders")
 
-local V = require(libname.."vector")
-local Matrix = require(libname.."matrix")
-local Camera = require(libname.."camera")
-local Mesh = require(libname.."mesh")
+local V = require(LIBPATH.."vector")
+local Matrix = require(LIBPATH.."matrix")
+local Camera = require(LIBPATH.."camera")
+local Mesh = require(LIBPATH.."mesh")
 
 
 local G = {}
@@ -168,6 +169,7 @@ function G.draw3D(shader)
 		for _,attribName in ipairs(shader.attributes) do
 			local buffer = mesh.attributes[attribName] or DefaultTable(function() return vec1(0) end)
 			table.insert(attributes, buffer)
+			--print("ATTRIBUTE:",attribName)
 		end
 
 
@@ -177,7 +179,7 @@ function G.draw3D(shader)
 		print("ind:"); map(ind, print2)
 		print("pos:"); map(attributes[1], print2)
 		print("norm:"); map(attributes[2], print2)
-		print("color:"); map(attributes[3], print2)
+		--print("color:"); map(attributes[3], print2)
 		--]]
 
 		gl.glUniformMatrix4fv(mvpLocation, 1, gl.GL_FALSE, transform.usrdata)
@@ -198,7 +200,7 @@ function map(list, func)
 	end
 end
 
-function G.draw2D()
+function G.draw2D(shader)
 	-- draw all polygons with a simple color shader
 	local r,g,b = 1,0,1
 	local prog = shader2D.prog
