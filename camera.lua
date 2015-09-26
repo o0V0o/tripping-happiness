@@ -1,6 +1,5 @@
-local libname = "drawlib."
-local Matrix = require(libname.."matrix")
-local O = require(libname.."object")
+local Matrix = require(LIBPATH.."matrix")
+local O = require(LIBPATH.."object")
 
 
 local Camera = O.class()

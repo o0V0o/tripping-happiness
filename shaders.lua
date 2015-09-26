@@ -1,5 +1,5 @@
 local ffi = require("ffi")
-local gl = require("ffi/openGL")
+local gl = require("ffi/OpenGL")
 local S =  {}
 
 function S.validateProgram( program )
@@ -42,7 +42,8 @@ end
 function S.compileShader( src, type )
 	local shader = gl.glCreateShader( type )
 	if shader == 0 then
-		error( "glGetError: " .. tonumber( gl.glGetError()) )
+		print("shader type:", type)
+		error( "glGetError: " .. gl.glGetError())
 	end
 	local src = ffi.new( "char[?]", #src, src )
 	local srcs = ffi.new( "const char*[1]", src )
@@ -57,6 +58,7 @@ function S.compileShader( src, type )
 end
 
 local function readFile(fName)
+	print("opening:", fName)
 	local f = io.open(fName, "rb")
 	local content = f:read("*all")
 	f:close()

@@ -1,12 +1,15 @@
 -- matrix/vector and quaternion implementations: https://github.com/Wiladams/TINN/tree/master/src/graphicsZ
 
+--local LIBPATH = "drawlib."
+LIBPATH = (select('1', ...):match("(.*[/])[^/]*")) or ""
+--LIBPATH = "tripping-happiness/"
+-- add ffi libs to package path
+require(LIBPATH.."ffipath")
 -- load opengl
 local ffi = require("ffi")
-local gl = require("ffi/openGL")
+local gl = require("ffi/OpenGL")
 local glfw = require("ffi/glfw")
 -- load my code :D
---local LIBPATH = "drawlib."
-local LIBPATH = select('1', ...):match(".+%.") or ""
 local O = require(LIBPATH.."object")
 local S = require(LIBPATH.."shaders")
 
@@ -14,6 +17,7 @@ local V = require(LIBPATH.."vector")
 local Matrix = require(LIBPATH.."matrix")
 local Camera = require(LIBPATH.."camera")
 local Mesh = require(LIBPATH.."mesh")
+local Types = require(LIBPATH.."types")
 
 
 local G = {}
@@ -54,9 +58,10 @@ local shader2D
 
 function G.init()
 	assert( glfw.glfwInit() )
+	glfw.glfwWindowHint( glfw.GLFW_DEPTH_BITS, 16)
+	glfw.glfwWindowHint( glfw.GLFW_CONTEXT_VERSION_MAJOR, 3)
+	glfw.glfwWindowHint( glfw.GLFW_CONTEXT_VERSION_MINOR, 3)
 	--glfw.glfwWindowHint( glfw.GLFW_SAMPLES, 4)
-	--glfw.glfwWindowHint( glfw.GLFW_CONTEXT_VERSION_MAJOR, 3)
-	--glfw.glfwWindowHint( glfw.GLFW_CONTEXT_VERSION_MINOR, 3)
 	--glfw.glfwWindowHint( glfw.GLFW_OPENGL_FORWARD_COMPAT, gl.GL_TRUE)
 	--glfw.glfwWindowHint( glfw.GLFW_OPENGL_PROFILE, glfw.GLFW_OPENGL_CORE_PROFILE)
 end
@@ -167,7 +172,7 @@ function G.draw3D(shader)
 		local pts = mesh.verts
 		local attributes = {}
 		for _,attribName in ipairs(shader.attributes) do
-			local buffer = mesh.attributes[attribName] or DefaultTable(function() return vec1(0) end)
+			local buffer = mesh.attributes[attribName] or Types.DefaultTable(function() return V.vec1(0) end)
 			table.insert(attributes, buffer)
 			--print("ATTRIBUTE:",attribName)
 		end
@@ -217,7 +222,7 @@ function G.draw2D(shader)
 		local pts = op.pts
 		local colors = {}
 		for _=1,#pts do
-			table.insert( colors, V.vec3(color.r, color.g, .5, 1))
+			table.insert( colors, V.vec3(color.r, color.g, color.b, 1))
 		end
 		-- buffer and send points
 		vbo2D:bufferPoints(pts, colors)
@@ -289,10 +294,11 @@ function Window.__init(self, title, width, height, fullscreen)
 	height = height or 480
 	if not fullscreen then fullscreen = false end
 
-	glfw.glfwWindowHint( glfw.GLFW_DEPTH_BITS, 16)
+	width, height = 100, 100
 	local win = assert(
-		ffi.gc( glfw.glfwCreateWindow( width, height, glfw.GLFW_WINDOWED, title, nil), glfw.glfwDestroyWindow))
-	local window = {usrdata = win}
+		--ffi.gc( glfw.glfwCreateWindow( width, height, glfw.GLFW_WINDOWED, title, nil), glfw.glfwDestroyWindow)) -- bad API..
+		ffi.gc( glfw.glfwCreateWindow( width, height, title, nil,  nil), glfw.glfwDestroyWindow))
+	local window = {}
 	self.usrdata = win
 
 	self.lastFPS = glfw.glfwGetTime()

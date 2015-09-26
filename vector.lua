@@ -1,5 +1,4 @@
-local libname = "drawlib."
-local O = require(libname.."object")
+local O = require(LIBPATH.."object")
 local ffi = require("ffi")
 
 local V = {}
@@ -73,6 +72,14 @@ function Vector:scale(s)
 	local usrdata = self.usrdata
 	for i = 0,self.dim-1 do
 		usrdata[i] = usrdata[i] * s
+	end
+	return self
+end
+
+function Vector:divide(s)
+	local usrdata = self.usrdata
+	for i = 0,self.dim-1 do
+		usrdata[i] = usrdata[i] / s
 	end
 	return self
 end
