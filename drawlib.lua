@@ -4,11 +4,15 @@
 LIBPATH = (select('1', ...):match("(.*[/])[^/]*")) or ""
 --LIBPATH = "tripping-happiness/"
 -- add ffi libs to package path
-require(LIBPATH.."ffipath")
+--require(LIBPATH.."ffipath")
 -- load opengl
-local ffi = require("ffi")
-local gl = require("ffi/OpenGL")
-local glfw = require("ffi/glfw")
+--local ffi = require("ffi")
+local ctypes = require("ctypes") -- interface to create "lowlevel" types for making floats, ints, arrays, etc.
+local gltypes = require("gltypes") -- interface to create gltypes, such as GLint, without having to abstract (again) over the ctypes
+--local gl = require("ffi/OpenGL")
+--local glfw = require("ffi/glfw")
+local gl = require("OpenGl") --load a file that abstracts away where/how/what opengl is
+local platform = require("Platform") --load a file that abstacts away the window/context creation
 -- load my code :D
 local O = require(LIBPATH.."object")
 local S = require(LIBPATH.."shaders")

@@ -1,5 +1,6 @@
 local O = require(LIBPATH.."object")
-local ffi = require("ffi")
+--local ffi = require("ffi")
+local ctypes = require("ctypes")
 
 local V = {}
 local Vector = O.class(nil, function(self, key) return self:swizzle(key) end)

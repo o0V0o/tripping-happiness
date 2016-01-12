@@ -1,4 +1,5 @@
-local ffi = require("ffi")
+--local ffi = require("ffi")
+local ctypes = require("ctypes")
 local O = require(LIBPATH.."object")
 
 local M = {}

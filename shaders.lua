@@ -1,5 +1,7 @@
-local ffi = require("ffi")
-local gl = require("ffi/OpenGL")
+--local ffi = require("ffi") --can we abstract away the ffi interface for generating low-level data?
+local ctypes = require("ctypes")
+--local gl = require("ffi/OpenGL")
+local gl = require("OpenGL") -- load a file to abstract away where/how/what opengl is
 local S =  {}
 
 function S.validateProgram( program )
