@@ -1,6 +1,4 @@
---local ffi = require("ffi") --can we abstract away the ffi interface for generating low-level data?
-local ctypes = require("ctypes")
---local gl = require("ffi/OpenGL")
+local ffi = require("ffi") -- this file itself should be a specific implementation
 local gl = require("OpenGL") -- load a file to abstract away where/how/what opengl is
 local S =  {}
 

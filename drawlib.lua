@@ -50,6 +50,7 @@ glTypes[gl.GL_FLOAT] = "GLfloat"
 glTypes[gl.GL_INT] = "GLint"
 glTypes[gl.GL_UNSIGNED_INT] = "GLuint"
 
+
 context = nil
 local camera = Camera()
 
@@ -60,6 +61,7 @@ drawOps["MESH"] = {} -- 3d meshes
 
 local shader2D
 
+--[[
 function G.init()
 	assert( glfw.glfwInit() )
 	glfw.glfwWindowHint( glfw.GLFW_DEPTH_BITS, 16)
@@ -69,9 +71,13 @@ function G.init()
 	--glfw.glfwWindowHint( glfw.GLFW_OPENGL_FORWARD_COMPAT, gl.GL_TRUE)
 	--glfw.glfwWindowHint( glfw.GLFW_OPENGL_PROFILE, glfw.GLFW_OPENGL_CORE_PROFILE)
 end
+--]]
+function G.init()
+	assert(platform.init(), "could not load context creation api")
+end
 
 function G.time()
-	return glfw.glfwGetTime()
+	return platform.time()
 end
 
 function G.useCamera(cam)
@@ -85,6 +91,8 @@ function G.init2D()
 	print("init 2D drawing")
 end
 
+
+--[[
 function G.terminate()
 	-- close all open windows
 	if windowList then
@@ -101,18 +109,19 @@ function G.terminate()
 	end
 	glfw.glfwTerminate()
 end
-
-function G.newWindow( title, width, height, fullscreen )
-	return Window(title, width, height, fullscreen)
+--]]
+-- clean up any allocated resources that we can.
+function G.terminate()
+	for _, obj in pairs(G.resources) do
+		print("killing a resource", resource)
+		resource:destroy()
+	end
+	platform.terminate()
 end
 
-function G.loadShaders( vFile, fFile)
-	return S.loadShaders(vFile, fFile)
-end
 function G.mesh( mesh )
 	table.insert(drawOps["MESH"], mesh)
 end
-
 function G.clear()
 	gl.glClear( bit.bor(gl.GL_COLOR_BUFFER_BIT, gl.GL_DEPTH_BUFFER_BIT))
 end
@@ -122,7 +131,7 @@ function G.Shader.__init(self, vFile, fFile, ...)
 	local attributes = {...}
 	self.attributes = {}
 
-	self.prog = G.loadShaders(vFile, fFile)
+	self.prog = S.loadShaders(vFile, fFile)
 	local ptSize = 0
 	local dims = {}
 	for _,attrib in ipairs(attributes) do
@@ -147,13 +156,16 @@ function G.Shader.__init(self, vFile, fFile, ...)
 		self.vao:bindAttribute( gl.glGetAttribLocation(self.prog, attrib.name), self.vbo ,attrib.size, offset)
 		offset = offset + attrib.size
 	end
-	table.insert(shaderList, self)
+	table.insert(G.resources, self) --we are a GC collectable resources.
 end
 function G.Shader:destroy()
 		gl.glDeleteProgram(self.prog)
 		self.vbo:destroy()
 		self.eab:destroy()
 		self.vao:destroy()
+end
+function G.Shader:__index(key)
+	G.uniform(shader, name, value)
 end
 function G.uniform(shader, name, value)
 	local prog = shader.prog
@@ -163,7 +175,7 @@ end
 function G.draw3D(shader)
 	-- draw all 3D meshes with the given shader program
 	local prog = shader.prog
-	local vao = shader.vao
+	local vao = shader.vao --TODO buffers should be part of Mesh obj.
 	local vbo = shader.vbo
 	local eab = shader.eab
 	
@@ -209,6 +221,7 @@ function map(list, func)
 	end
 end
 
+--[[
 function G.draw2D(shader)
 	-- draw all polygons with a simple color shader
 	local r,g,b = 1,0,1
@@ -244,6 +257,7 @@ function G.clear2D()
 		drawOps["POLY"][i] = nil
 	end
 end
+--]]
 function G.circle(center, radius, color)
 	assert(center, "G.circle: no center")
 	assert(radius, "G.circle: no radius")
@@ -292,6 +306,7 @@ function G.rect(p1, p2, color)
 	G.polygon({p1, p3, p2, p4}, color)
 end
 
+--[[
 function Window.__init(self, title, width, height, fullscreen)
 	assert(title, "no title.")
 	width = width or 640
@@ -381,6 +396,7 @@ function Window:onResize( func )
 end
 
 
+--]]
 
 
 --function VAO.new() return VAO a new VAO object

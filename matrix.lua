@@ -1,5 +1,5 @@
---local ffi = require("ffi")
-local ctypes = require("ctypes")
+local ffi = require("ffi") --this can be an abstraction library
+--local ctypes = require("ctypes")
 local O = require(LIBPATH.."object")
 
 local M = {}
