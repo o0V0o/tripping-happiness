@@ -1,6 +1,6 @@
 -- matrix/vector and quaternion implementations: https://github.com/Wiladams/TINN/tree/master/src/graphicsZ
 
-local gl = require("openGl") --load a file that abstracts away where/how/what opengl is
+local gl = require("openGL") --load a file that abstracts away where/how/what opengl is
 local platform = require("Platform") --load a file that abstacts away the window/context creation
 
 local class = require("object")
