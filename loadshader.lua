@@ -1,5 +1,7 @@
 --shader loader script for WebGL platform.
 local gl=require("openGL")
+local get = require("get")
+
 local S = {}
 
 function S.validateShader(shader)
@@ -21,7 +23,10 @@ function S.compileShader(src, type)
 	assert(S.validateShader(shader), tostring(type).."| Shader compilation failed! :"..S.shaderLog(shader))
 	return shader
 end
-function S.loadShaders(vSrc, fSrc)
+function S.loadShaders(vFile, fFile)
+	local vSrc = get(vFile)
+	local fSrc = get(fFile)
+
 	local vShader = S.compileShader(vSrc, gl.VERTEX_SHADER)
 	local fShader = S.compileShader(fSrc, gl.FRAGMENT_SHADER)
 	local program = gl.createProgram()

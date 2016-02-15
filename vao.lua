@@ -5,7 +5,6 @@ local VAO = class()
 --function VAO.new() return VAO a new VAO object
 function VAO.__init(self)
 	local vao = gl.glGenVertexArrays(1)
-	gl.glBindVertexArray(vao[0])
 	self.usrdata = vao
 end
 --function VAO:destroy() free resources of this VAO object
@@ -15,7 +14,7 @@ function VAO:destroy()
 end
 -- function VAO:bind() binds this VAO so it can be used
 function VAO:bind()
-	gl.glBindVertexArray(self.usrdata])
+	gl.glBindVertexArray(self.usrdata)
 end
 -- function VAO:unbind() unbinds this VAO so it can't be used.
 function VAO:unbind()
@@ -27,14 +26,11 @@ function VAO:bindAttribute(location, buffer, count, offset, normalize)
 	assert(buffer, "invalid parameters to VAO.bindAttribute")
 	count = count or buffer.dim or 1
 	print(offset)
-	offset = offset*ffi.sizeof(glTypes[buffer.datatype]) or 0
+	offset = (offset or 0)*gl.sizeof(buffer.datatype)
 	print(offset)
-	offset = ffi.cast("void*", offset)
 	normalize = normalize or false
-	--if not normalize then normalize = false end
-	
 
-	local stride = (buffer.dim) * ffi.sizeof( glTypes[ buffer.datatype ] )
+	local stride = (buffer.dim) * gl.sizeof(buffer.datatype)
 	local datatype = buffer.datatype
 
 	print("binding attribute:", location, count, offset, stride)
@@ -44,8 +40,8 @@ function VAO:bindAttribute(location, buffer, count, offset, normalize)
 	gl.glEnableVertexAttribArray(location)
 	--bind active VBO to attribute location in this VAO.
 	gl.glVertexAttribPointer(location, count, datatype, normalize, stride, offset)
-
 	buffer:unbind()
 	self:unbind()
 end
 
+return VAO
