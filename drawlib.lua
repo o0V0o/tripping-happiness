@@ -6,8 +6,8 @@ local platform = require("Platform") --load a file that abstacts away the window
 local class = require("object")
 local V = require("vector")
 --local Matrix = require("matrix")
-local Camera = require("camera")
-local Mesh = require("mesh")
+--local Camera = require("camera")
+--local Mesh = require("mesh")
 
 
 local G = {}
@@ -31,7 +31,7 @@ function G.terminate()
 	platform.terminate()
 end
 
-function G.addMesh( mesh )
+function G.addObject( mesh )
 	table.insert(scene, mesh)
 end
 function G.clear()
