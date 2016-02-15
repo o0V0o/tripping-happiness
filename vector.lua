@@ -1,17 +1,17 @@
-local O = require(LIBPATH.."object")
---local ffi = require("ffi")
-local ctypes = require("ctypes")
+local class = require'object'
+local ctypes = require'ctypes'
 
 local V = {}
-local Vector = O.class(nil, function(self, key) return self:swizzle(key) end)
+local Vector = class(nil, function(self, key) return self:swizzle(key) end)
 
-function V.vec1(x) if type(x)=="number" then return Vector(1,x or 0) else return V.Vector(1,x) end end
-function V.vec2(x,y) if type(x)=="number" and type(y)=="number" then return Vector(2,x,y) else return V.Vector(2,x,y) end end
-function V.vec3(x,y,z) if type(x)=="number" and type(y)=="number" and type(z)=="number" then return Vector(3,x,y,z) else return V.Vector(3,x,y,z) end end
+function V.vec1(x) if type(x)=="number" then return Vector(x or 0) else return V.Vector(x) end end
+function V.vec2(x,y) if type(x)=="number" and type(y)=="number" then return Vector(x,y) else return V.Vector(x,y) end end
+function V.vec3(x,y,z) if type(x)=="number" and type(y)=="number" and type(z)=="number" then return Vector(x,y,z) else return V.Vector(x,y,z) end end
 function V.vec4(x,y,z,w) if type(x)=="number" and type(y)=="number" and type(z)=="number" and type(w)=="number" then return Vector(4,x,y,z,w) else return V.Vector(4,x,y,z,w) end end
 
-function V.Vector(dim,...)
+function V.Vector(...)
 	local args = {...}
+	local dim = #args
 	local params = {}
 	local i=1
 	while #params<dim do
@@ -40,15 +40,14 @@ function V.Vector(dim,...)
 		i = i + 1
 	end
 	assert(#params==dim, "incompatible types in Vector constructor")
-	return Vector(dim, unpack(params) )
+	return Vector(table.unpack(params) )
 end
 
-function Vector.__init(self,dim, ...)
-	local usrdata = ffi.new("float[?]", dim, ...)
+function Vector.__init(self,...)
+	local usrdata = ctypes.floatArray({...})
 	self.usrdata = usrdata
 	self.dim = dim
 	self.super = V.Vector
-	--return setmetatable({usrdata=usrdata, dim=dim}, Vector)
 end
 
 function Vector:add(v)
@@ -148,7 +147,7 @@ end
 
 function Vector:copy()
 	local v2 = Vector( self.dim )
-	ffi.copy(v2.usrdata, self.usrdata, ffi.sizeof(self.usrdata))
+	local v2.usrdata = ctypes.copy(self.usrdata)
 	return v2
 end
 

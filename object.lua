@@ -54,4 +54,4 @@ function Object.clone(self)
 	return setmetatable(clone, getmetatable(self))
 end
 
-return Object
+return Object.class
