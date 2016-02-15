@@ -2,7 +2,7 @@ local context = {}
 function getContext(canvas)
 	canvas=canvas or js.global.glCanvas or "GLCanvas"
 
-	if context[canvas] then return context[canvas]
+	if context[canvas] then return context[canvas] end
 
 	if type(canvas) == "string" then
 		canvas = js.global.document:getElementById(canvas)
