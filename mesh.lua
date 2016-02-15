@@ -1,7 +1,8 @@
-local O = require(LIBPATH.."object")
-local V = require(LIBPATH.."vector")
-local Matrix = require(LIBPATH.."matrix")
-local types = require(LIBPATH.."types")
+local get = require('get')
+local class = require("object")
+local V = require("vector")
+local Matrix = require("matrix")
+local types = require("types")
 
 if not table.unpack then table.unpack = unpack end
 
@@ -254,15 +255,12 @@ function M.load(fname)
 	local name, ext = fname:match("(.-)[.]([^.]+)")
 	ext = ext:upper()
 	print(fname,name,ext)
-	local file = io.open(fname)
-	assert(file, "Could not open file:" .. fname)
-	local content = file:read("*all")
-	file:close()
+	local content = get(fname)
 	if loaders[ext] then return loaders[ext](content) end
 	error("No loader present for " .. ext .. " filetype.")
 end
 
-Mesh = O.class()
+Mesh = class()
 --constructor Mesh([Vector] vertArray, [Int] elementIndexArray, Table attributes) 
 --return Mesh a new Mesh object with the given vertices, that form faces as described in the *elementIndexArray*
 --The constructed Mesh object has a set of attributes, such as normals, texure coordinates, etc, that can be passed 
