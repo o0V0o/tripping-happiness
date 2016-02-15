@@ -1,4 +1,4 @@
-local gl = require("OpenGl") --load a file that abstracts away where/how/what opengl is
+local gl = require("openGL") --load a file that abstracts away where/how/what opengl is
 local loadShader = require("loadshader")
 local class = require("object")
 
