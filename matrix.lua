@@ -30,12 +30,13 @@ function M.perspective(near, far, aspect, fov)
 
 	local t = math.tan(fov/2)
 	local f = 1/t
+	local d = far-near
 
 	mdata[ 0 ] = f/aspect
 	mdata[ 5 ] = f
-	mdata[ 10 ] = -1*(near+far)/(near-far)
+	mdata[ 10 ] = -1*(near+far)/d
 	mdata[ 11 ] = -1
-	mdata[ 14 ] = (-2*far*near)/(near-far)
+	mdata[ 14 ] = (-2*far*near)/d
 	return self
 end
 
