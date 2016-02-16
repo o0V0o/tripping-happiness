@@ -1,12 +1,12 @@
-local ffi = require("ffi") --this can be an abstraction library
---local ctypes = require("ctypes")
-local O = require(LIBPATH.."object")
+
+local class = require'object'
+local ctypes = require'ctypes'
 
 local M = {}
 
 --local Matrix = {}
 --Matrix.__index = Matrix
-local Matrix = O.class()
+local Matrix = class()
 
 function M.mat3()
 	return Matrix(3,3)
@@ -14,17 +14,12 @@ end
 function M.mat4()
 	return Matrix(4,4)
 end
-function M.identity(dim1, dim2)
-	assert(dim1, "Matrix.identity: no dimension given")
-	dim2 = dim2 or dim1
-	local M = Matrix(dim1,dim2)
+function M.identity(dim)
+	assert(dim, "Matrix.identity: no dimension given")
+	local M = Matrix(dim,dim)
 	local usrdata = M.usrdata
-	local cols = M.dim[1]
-	local rows = M.dim[2]
-	local dim
-	if cols<rows then dim=cols else dim=rows end
 	for i = 0,dim-1 do
-		usrdata[ (i*cols) +i ] = 1.0
+		usrdata[ (i*dim) +i ] = 1.0
 	end
 	return M
 end
@@ -36,16 +31,17 @@ function M.perspective(near, far, aspect, fov)
 	local t = math.tan(fov/2)
 	mdata[ 0 ] = 1/(aspect*t)
 	mdata[ 5 ] = 1/t
-	mdata[ 10 ] = (-near-far)/(near-far)
+	--mdata[ 10 ] = (-near-far)/(near-far)
+	mdata[10] = far/(far-near)
 	mdata[ 11 ] = 1
-	mdata[ 14 ] = (2*far*near)/(near-far)
+	--mdata[ 14 ] = (2*far*near)/(near-far)
+	mdata[14] = (-1*far*near)/(near-far)
 	return self
 end
 
 function Matrix.__init(self,dim1, dim2)
 	assert(dim1 and dim2, "Matrix.new: not enough dimensions given")
-	local matrix = ffi.new("float[?]", dim1*dim2)
-	self.usrdata = matrix
+	self.usrdata = ctypes.floatArray( dim1*dim2 )
 	           --col, row
 	self.dim = {dim1,dim2}
 end
@@ -263,7 +259,7 @@ end
 
 function Matrix:copy()
 	local m2 = Matrix( self.dim[1], self.dim[2] )
-	ffi.copy(m2.usrdata, self.usrdata, ffi.sizeof(self.usrdata))
+	m2.usrdata = ctypes.copy(self.usrdata)
 	return m2
 end
 

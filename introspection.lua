@@ -1,5 +1,8 @@
 local gl = require("openGL")
+local ctypes = require("ctypes")
 local class = require("object")
+
+local I = {}
 
 local Attribute = class()
 function Attribute:__init(info)
@@ -20,18 +23,16 @@ end
 
 
 local setters = {
-	gl.GL_FLOAT = {
-		1=function(self,v) gl.glUniform1f(self.idx, v) end,
-		2=function(self,v) gl.glUniform2fv(self.idx, table.unpack(v)) end,
-		3=function(self,v) gl.glUniform3fv(self.idx, table.unpack(v)) end,
-		4=function(self,v) gl.glUniform4fv(self.idx, table.unpack(v)) end,
-		},
-	gl.GL_INT = {
-		1=function(self,v) gl.glUniform1i(self.idx, v) end,
-		2=function(self,v) gl.glUniform2iv(self.idx, table.unpack(v)) end,
-		3=function(self,v) gl.glUniform3iv(self.idx, table.unpack(v)) end,
-		4=function(self,v) gl.glUniform4iv(self.idx, table.unpack(v)) end,
-		}
+	[gl.GL_FLOAT]=function(self,v) gl.glUniform1f(self.idx, v) end,
+	[gl.GL_FLOAT_VEC2]=function(self,v) gl.glUniform2fv(self.idx, ctypes.floatArray(v)) end,
+	[gl.GL_FLOAT_VEC3]=function(self,v) gl.glUniform3fv(self.idx, ctypes.floatArray(v)) end,
+	[gl.GL_FLOAT_VEC4]=function(self,v) gl.glUniform4fv(self.idx, ctypes.floatArray(v)) end,
+
+	[gl.GL_INT]=function(self,v) gl.glUniform1i(self.idx, v) end,
+	[gl.GL_INT_VEC2]=function(self,v) gl.glUniform2iv(self.idx, ctypes.intArray(v)) end,
+	[gl.GL_INT_VEC3]=function(self,v) gl.glUniform3iv(self.idx, ctypes.intArray(v)) end,
+	[gl.GL_INT_VEC4]=function(self,v) gl.glUniform4iv(self.idx, ctypes.intArray(v)) end,
+	[gl.GL_FLOAT_MAT4]=function(self,v) gl.glUniformMatrix4fv(self.idx, false, v.usrdata) end
 }
 
 local Uniform = class()
@@ -41,9 +42,7 @@ function Uniform:__init(info)
 	self.size = info.size
 end
 function Uniform:set(v)
-	local ok,err = pcall(setters[self.type][self.size], self, v)
-	if not ok then print("err on set:", self) end
-	assert(ok, err)
+	setters[self.type](self, v)
 end
 function Uniform:__tostring()
 	local s = {}
@@ -56,31 +55,37 @@ function Uniform:__tostring()
 	return table.concat(s)
 end
 
-function inspect(program)
+function I.inspect(program)
 	local n = gl.glGetProgramiv(program, gl.GL_ACTIVE_ATTRIBUTES)
+	print(n)
 	--WebGLActiveInfo {name='...', size=n, type=?}
 	local attributes = {}
-	for i=1,n do
+	for i=0,n-1 do
 		local info = gl.glGetActiveAttrib(program, i)
 		table.insert(attributes, info)
 	end
 
 	local attributeObjs = {}
-	for k,v in attributes do
+	for k,v in pairs(attributes) do
+		print(k,v, v.name, v.size, v.type)
 		attributeObjs[v.name] = Attribute(v)
 	end
 
-	local n = gl.glGetProgramiv(program, gl.GL_ACTIVE_ATTRIBUTES)
+	local n = gl.glGetProgramiv(program, gl.GL_ACTIVE_UNIFORMS)
 	local uniforms = {}
-	for i=1,n do
+	for i=0,n-1 do
 		local info = gl.glGetActiveUniform(program, i)
 		table.insert(uniforms, info)
 	end
 
-	local attributeObjs = {}
-	for k,v in attributes do
-		attributeObjs[v.name] = Attribute(v)
+	local uniformObjs = {}
+	for k,v in pairs(uniforms) do
+		print(k,v, v.name, v.size, v.type)
+		uniformObjs[v.name] = Uniform(v)
+		uniformObjs[v.name].idx = gl.getUniformLocation(program, v.name)
 	end
 
-	return attributeObjs, uniformObj
+	return attributeObjs, uniformObjs
 end
+
+return I

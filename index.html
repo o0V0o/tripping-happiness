@@ -20,6 +20,9 @@
 
 
 	<script type="text/javascript">
+		jsMatUniform = function(gl, program){
+			var loc = gl.getUniformLocation(program, "mvpMatrix")
+		}
 		jsArray = function(table){
 			var array = [];
 			var i=1;
@@ -28,6 +31,16 @@
 				i=i+1;
 			}
 			return array;
+		}
+		jsInt16Array = function(table){
+			var array = jsArray(table);
+			var intArray = new Uint16Array(array);
+			return intArray
+		}
+		jsInt32Array = function(table){
+			var array = jsArray(table);
+			var intArray = new Int32Array(array);
+			return intArary
 		}
 		jsFloat32Array = function(table){
 			var array = jsArray(table);

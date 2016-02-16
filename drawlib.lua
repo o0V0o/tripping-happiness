@@ -1,7 +1,7 @@
 -- matrix/vector and quaternion implementations: https://github.com/Wiladams/TINN/tree/master/src/graphicsZ
 
 local gl = require("openGL") --load a file that abstracts away where/how/what opengl is
-local platform = require("Platform") --load a file that abstacts away the window/context creation
+local platform = require("platform") --load a file that abstacts away the window/context creation
 
 local class = require("object")
 local V = require("vector")
@@ -35,14 +35,7 @@ function G.addObject( mesh )
 	table.insert(scene, mesh)
 end
 function G.clear()
-	gl.glClear( bit.bor(gl.GL_COLOR_BUFFER_BIT, gl.GL_DEPTH_BUFFER_BIT))
-end
-function G.draw(shader)
-	-- draw all 3D meshes with the given shader program
-	shader:use()
-	for i,mesh in pairs( scene ) do
-		mesh:draw(shader, camera)
-	end
+	gl.glClear( gl.GL_COLOR_BUFFER_BIT+gl.GL_DEPTH_BUFFER_BIT)
 end
 
 G.init()

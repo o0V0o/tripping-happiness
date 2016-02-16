@@ -30,6 +30,7 @@ function S.loadShaders(vFile, fFile)
 	local vShader = S.compileShader(vSrc, gl.VERTEX_SHADER)
 	local fShader = S.compileShader(fSrc, gl.FRAGMENT_SHADER)
 	local program = gl.createProgram()
+	assert(program, "could not create program object")
 	gl.attachShader(program, vShader)
 	gl.attachShader(program, fShader)
 	gl.linkProgram(program)
@@ -39,4 +40,4 @@ function S.loadShaders(vFile, fFile)
 	return program
 end
 
-return S
+return S.loadShaders

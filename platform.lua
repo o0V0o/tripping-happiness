@@ -14,3 +14,5 @@ end
 
 function P.terminate()
 end
+
+return P

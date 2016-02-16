@@ -2,16 +2,15 @@ local class = require'object'
 local ctypes = require'ctypes'
 
 local V = {}
-local Vector = class(nil, function(self, key) return self:swizzle(key) end)
+local Vector = class(nil, function(self,pri,key) return self:swizzle(key) end)
 
 function V.vec1(x) if type(x)=="number" then return Vector(x or 0) else return V.Vector(x) end end
-function V.vec2(x,y) if type(x)=="number" and type(y)=="number" then return Vector(x,y) else return V.Vector(x,y) end end
-function V.vec3(x,y,z) if type(x)=="number" and type(y)=="number" and type(z)=="number" then return Vector(x,y,z) else return V.Vector(x,y,z) end end
-function V.vec4(x,y,z,w) if type(x)=="number" and type(y)=="number" and type(z)=="number" and type(w)=="number" then return Vector(4,x,y,z,w) else return V.Vector(4,x,y,z,w) end end
+function V.vec2(x,y) if type(x)=="number" and type(y)=="number" then return Vector(x,y) else return V.Vector(2,x,y) end end
+function V.vec3(x,y,z) if type(x)=="number" and type(y)=="number" and type(z)=="number" then return Vector(x,y,z) else return V.Vector(3,x,y,z) end end
+function V.vec4(x,y,z,w) if type(x)=="number" and type(y)=="number" and type(z)=="number" and type(w)=="number" then return Vector(x,y,z,w) else return V.Vector(4,x,y,z,w) end end
 
-function V.Vector(...)
+function V.Vector(dim,...)
 	local args = {...}
-	local dim = #args
 	local params = {}
 	local i=1
 	while #params<dim do
@@ -44,10 +43,8 @@ function V.Vector(...)
 end
 
 function Vector.__init(self,...)
-	local usrdata = ctypes.floatArray({...})
-	self.usrdata = usrdata
-	self.dim = dim
-	self.super = V.Vector
+	self.usrdata = ctypes.floatArray({...})
+	self.dim = #{...}
 end
 
 function Vector:add(v)
@@ -135,6 +132,9 @@ function Vector:normalize()
 end
 
 function Vector:swizzle(str)
+	print(str, type(str))
+	if type(str)=='number' then return self.usrdata[str] end
+	assert(type(str)=='string', "must swizzle with strings!")
 	swizzletable = { x=0, r=0, y=1, g=1, z=2, b=2, w=3 }
 	local usrdata = self.usrdata
 	values = {}
@@ -142,12 +142,14 @@ function Vector:swizzle(str)
 		table.insert(values, usrdata[ swizzletable[c] ] )
 	end
 	if #values == 1 then return values[1] end -- return a single number, not a vec1
-	return Vector( #values, table.unpack( values ) )
+	return Vector( table.unpack( values ) )
 end
 
 function Vector:copy()
-	local v2 = Vector( self.dim )
-	local v2.usrdata = ctypes.copy(self.usrdata)
+	local v2 = {}
+	v2.usrdata = ctypes.copy(self.usrdata)
+	v2.dim = self.dim
+	setmetatable(v2, getmetatable(self))
 	return v2
 end
 

@@ -19,7 +19,6 @@ function split(p, pattern)
 	for m in p:gmatch(pattern) do
 		table.insert(t, m)
 	end
-	print("split:", p, table.unpack(t))
 	return t
 end
 
@@ -152,7 +151,6 @@ loaders["OBJ"] = function(content)
 	local texcoords = {}; local texInds = {}
 	local normals = {}; local normInds = {}
 
-	local instructions = {}
 
 	--get absolute index from relative (negative) indices
 	local function absInd(i, list)
@@ -161,32 +159,32 @@ loaders["OBJ"] = function(content)
 		return i
 	end
 
+	local instructions = {}
 	instructions["v"] = function(params)
-		assert(params[1]);assert(params[2]);assert(params[3])
-		params[4] = params[4] or 1
-		table.insert(verts, V.vec4(tonumber(params[1]),
-		                           tonumber(params[2]),
-		                           tonumber(params[3]),
-		                           tonumber(params[4])))
-		print("v -> ",#verts,verts[#verts])
+		local v = V.vec4(tonumber(params[1]) or 0,
+						tonumber(params[2]) or 0,
+						tonumber(params[3]) or 0,
+						tonumber(params[4]) or 0)
+		table.insert(verts, v)
+		print("v -> ",#verts,v)
 	end
 
 	instructions["vn"] = function(params)
 		assert(params[1]);assert(params[2]);assert(params[3])
-		table.insert(normals, V.vec3(tonumber(params[1]),
-		                             tonumber(params[2]),
-		                             tonumber(params[3])))
+		assert(params[1] and params[2] and params[3], "not enough parameters to make a normal")
+		local v = V.vec3(tonumber(params[1]),
+						 tonumber(params[2]),
+						 tonumber(params[3]))
+		table.insert(normals, v)
+		print("normal:", v)
 	end
 	instructions["vt"] = function(params)
 		assert(params[1]);assert(params[2])
-		if params[3] then
-			table.insert(texcoords, V.vec3(tonumber(params[1]),
-			                               tonumber(params[2]),
-			                               tonumber(params[3])))
-		else
-			table.insert(texcoords, V.vec2(tonumber(params[1]),
-			                               tonumber(params[2])))
-		end
+		local v = V.Vector( tonumber(params[1]),
+							tonumber(params[2]),
+							tonumber(params[3]))
+		table.insert(texcoords, v)
+		print("texcoord:", v)
 	end
 
 	instructions["f"] = function(params)
@@ -194,12 +192,10 @@ loaders["OBJ"] = function(content)
 		local firstV,firstT,firstN
 		local lastV,lastT,lastN
 		for _,p in ipairs(params) do
-			print("param:", p)
 			local vertInd, texInd, normInd = table.unpack( split(p,"([^/]*)/?") )
 			vertInd = absInd(tonumber(vertInd), verts)
 			texInd = absInd(tonumber(texInd), texcoords)
 			normInd = absInd(tonumber(normInd), normals)
-			print("splitted:", vertInd, texInd, normInd)
 
 			if not firstV then
 				firstV=vertInd; firstT=texInd; firstN=normInd
@@ -216,10 +212,8 @@ loaders["OBJ"] = function(content)
 	end
 
 	for line in content:gmatch(".-\n") do
-		print("line:", line)
 		params = split(line, "%S+")
 		local cmd = table.remove(params, 1)
-		print("cmd:",cmd)
 		if instructions[cmd] then
 			instructions[cmd](params)
 		end
@@ -244,10 +238,11 @@ loaders["OBJ"] = function(content)
 		print(k,v)
 	end
 	print( table.unpack(args))
-	local mesh = M.meshanize(table.unpack( args))
+	--local mesh = M.meshanize(table.unpack( args))
 	local mesh = M.meshanize(verts, vertInds, "texcoord", texcoords, texInds, "normal", normals, normalInds)
-	local mesh = M.meshanize(verts, vertInds, "blah", {}, normInds)
-	local mesh = M.meshanize(verts, vertInds) 
+	--local mesh = M.meshanize(verts, vertInds, "blah", {}, normInds)
+	--local mesh = M.meshanize(verts, vertInds) 
+	print("done loading obj")
 	return mesh
 end
 function M.load(fname)
@@ -266,14 +261,14 @@ Mesh = class()
 --The constructed Mesh object has a set of attributes, such as normals, texure coordinates, etc, that can be passed 
 --as a table in the following format:
 --	{ "attributeName" = vectorArray, ... }
+--	such that each vectorArray is the *same size*, indexed by ind per face
 --example: Mesh( {vec3(1,0,0),vec3(1,1,1),vec3(0,1,1)}, {1,2,3}, {normal={vec3(1,0,0),vec3(0,0,1),vec3(0,1,0)},texcoord={vec2(0,0),vec2(1,1),vec2(.5,.5)}})
 function Mesh:__init(verts, ind, attributes)
 	self.transform = Matrix.identity(4)
 	self.verts = verts
-	self.ind = ind
+	self.indices = ind
 	self.attributes = attributes or {}
 	self.attributes["position"] = verts
-	self.attributes["pos"] = verts
 	if self.verts[1].dim == 3 then
 		for k,v in pairs(self.verts) do
 			self.verts[k] = V.vec4( v, 1) -- add W component.
@@ -293,6 +288,7 @@ end
 function Mesh:linkTo( mesh )
 	self.verts = mesh.verts
 	self.ind = mesh.ind
+	self.indices = mesh.indices
 	self.attributes = mesh.attributes
 	self.transform = mesh.transform
 	return self
@@ -300,8 +296,8 @@ end
 function Mesh:copyFrom( mesh )
 	self.verts = {}
 	for k,v in pairs(mesh.verts) do self.verts[k] = v:copy() end
-	self.ind = {}
-	for k,v in pairs(mesh.ind) do self.ind[k] = v:copy() end
+	self.indices = {}
+	for k,v in pairs(mesh.indices) do self.indices[k] = v:copy() end
 	self.attributes = {}
 	for k,v in pairs(mesh.attributes) do self.attributes[k] = v:copy() end
 	self.transform = mesh.transform:copy()
@@ -330,7 +326,7 @@ function Mesh:__tostring()
 		table.insert(str, name)
 	end
 	table.insert(str, "\n")
-	for _,i in ipairs(self.ind) do
+	for _,i in ipairs(self.indices) do
 		i=i+1
 		table.insert(str, tostring(i))
 		table.insert(str, "\t")
