@@ -23,6 +23,34 @@ function M.identity(dim)
 	end
 	return M
 end
+function M.lookat(eye, at, up)
+	local v = (at-eye):normalize()
+	local n = (v*up):normalize()
+	local u = (n*v):normalize()
+	v=-v
+
+	if eye==at then return M.identity(4) end
+
+	local M=Matrix(4,4)
+	mdata = M.usrdata
+	mdata [ 0 ] = n.x
+	mdata [ 4 ] = n.y
+	mdata [ 8 ] = n.z
+	mdata [ 12] = -n:dot(eye)
+	mdata [ 1 ] = u.x
+	mdata [ 5 ] = u.y
+	mdata [ 9 ] = u.z
+	mdata [ 13] = -u:dot(eye)
+	mdata [ 2 ] = v.x
+	mdata [ 6 ] = v.y
+	mdata [ 10] = v.z
+	mdata [ 14] = -v:dot(eye)
+	mdata [ 3 ] = 0
+	mdata [ 7 ] = 0
+	mdata [ 11] = 0
+	mdata [ 15] = 1
+	return M
+end
 function M.perspective(near, far, aspect, fov)
 	local self = Matrix(4,4)
 	fov = math.rad(fov)
@@ -225,10 +253,8 @@ function Matrix.mult(m1,m2)
 	local cols = m.dim[2]
 	for i = 0,m.dim[1]-1 do
 		for j = 0,m.dim[2]-1 do
-			--print(".")
 			local v = 0
 			for n = 0,m1.dim[2]-1 do
-				--print("[",i,n,"] x [",n,j,"]")
 				v = v + d1[(i*d1cols)+n] * d2[(n*d2cols)+j]
 			end
 			mdata[(i*cols)+j] = v

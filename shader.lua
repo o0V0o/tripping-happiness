@@ -17,6 +17,7 @@ function Shader:__init(vFile, fFile)
 		offset = offset + gl.sizeof(attribute.type)
 	end
 	for _,attribute in pairs(self.attributes) do
+		print("enabling attribute", attribute.name)
 		gl.enableVertexAttribArray( attribute.idx )
 	end
 	self.loaded = true --indicates that further table acess will go to uniforms

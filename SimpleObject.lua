@@ -13,7 +13,7 @@ local defaultMap = {
 
 local O = class()
 function O:__init(mesh, attributeMap)
-	print("Simple Object created:", mesh)
+	--print("Simple Object created:", mesh)
 	self.attributeMap = attributeMap or defaultMap
 	self.mesh = mesh
 end
@@ -31,13 +31,13 @@ function O:recalculate(shader)
 	self.vbos = {}
 	self.eab = EAB()
 	for mesh_attrib,shader_attrib in pairs(self.attributeMap) do
-		print(mesh_attrib, shader_attrib)
-		print(self.mesh.attributes[mesh_attrib], shader.attributes[shader_attrib])
-		if shader.attributes[shader_attrib] then
-			assert(self.mesh.attributes[mesh_attrib], "no such attribute in mesh")
+		local attribute = shader.attributes[shader_attrib]
+		if attribute then
+			local data = self.mesh.attributes[mesh_attrib]
+			assert(data and #data>0, "no such attribute in mesh")
 			self.vbos[mesh_attrib] = VBO(gl.GL_FLOAT, gl.GL_STATIC_DRAW)
-			self.vbos[mesh_attrib]:bufferData( ctypes.floatArray( flatten(self.mesh.attributes[mesh_attrib] )) )
-			self.vbos[mesh_attrib]:useForAttribute(shader.attributes[shader_attrib])
+			self.vbos[mesh_attrib]:bufferData( ctypes.floatArray( flatten(data)) )
+			self.vbos[mesh_attrib]:useForAttribute(attribute)
 		end
 	end
 	print("eab buffering...")
@@ -45,13 +45,16 @@ function O:recalculate(shader)
 	print("calculated.")
 end
 function O:draw(shader)
-	for mesh_attrib, shader_attrib in pairs(self.attributeMap) do
-		if shader[shader_attrib] then
-			assert(self.mesh.attributes[mesh_attrib], "no such attribute in mesh")
-			self.vbos[mesh_attrib]:useForAttribute(shader[shader_attrib])
+	assert(self.eab, "need to recalculate SimpleObject before draw")
+	self.eab:bind()
+	for mesh_attrib,shader_attrib in pairs(self.attributeMap) do
+		local attribute = shader.attributes[shader_attrib]
+		if attribute then
+			local data = self.mesh.attributes[mesh_attrib]
+			assert(data and #data>0, "no such attribute in mesh")
+			self.vbos[mesh_attrib]:useForAttribute(attribute)
 		end
 	end
-	self.eab:bind()
 	gl.drawElements( gl.GL_TRIANGLES, #(self.mesh.indices) , self.eab.datatype, 0)
 end
 

@@ -16,7 +16,10 @@ local G = {}
 local scene = {}
 local resources = {} -- all non GC'd resources should go in here with a destroy method
 
-G.init = platform.init
+function G.init(...)
+	platform.init(...)
+	gl.glEnable(gl.GL_DEPTH_TEST)
+end
 G.time = platform.time
 
 function G.useCamera(cam)

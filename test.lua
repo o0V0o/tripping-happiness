@@ -1,3 +1,4 @@
+local oldprint = print
 local ctypes = require('ctypes')
 local Shader = require'shader'
 local M = require('mesh')
@@ -8,35 +9,56 @@ local SimpleObject = require('SimpleObject')
 
 local gl = require("openGL")
 
-local shader = Shader("shaders/simple.vs", "shaders/solid.fs")
+
+local shader = Shader("shaders/simple.vs", "shaders/toonshading.fs")
 local cubemesh = M.load("cube.obj")
+local spheremesh = M.load("sphere.obj")
+local monkeymesh = M.load("suzanne.obj")
+
 local cube = SimpleObject( cubemesh )
+local sphere = SimpleObject( spheremesh )
+local monkey = SimpleObject( monkeymesh )
 
 
 shader:use()
-gl.glClearColor(0.6,1,.2,1)
+gl.glClearColor(1,1,1,1)
 G:clear()
+
 cube:recalculate(shader)
+sphere:recalculate(shader)
+monkey:recalculate(shader)
+
 shader.color = {1,0,0} --set color to red.
+shader.shininess = 150
+shader.kDiffuse = 1
+shader.kSpecular = 0.5
+
 print("done")
 
 local mvp = Matrix.identity(4)
 local theta = 0
 
-local z = -0.5
+local z = -10
+local p = Matrix.perspective(0.1,100,1,45)
+local v = Matrix.lookat( vec3(3,3,3), vec3(0,0,0), vec3(0,1,0) )
+local m = Matrix.rotate( vec3(0,1,0), theta )
+local up = vec3(0,1,0)
+shader.perspective = p
+
 function update()
+	gl.viewport(0,0, gl.canvas.width, gl.canvas.height)
+	--G.resize(100,100)
 	G.clear()
 	theta = theta + .05
-	mvp = Matrix.identity(4)
-	local p = Matrix.perspective(0.1,100,1,90)
-	mvp:rotate( vec3(0,1,0), theta )
-	mvp:translate( vec3(0,0,z) )
-	mvp = mvp
-	--mvp:scale(z)
+	m:rotate( up, 0.05 )
 
-	shader.mvpMatrix = mvp --reset uniform
-	cube:draw(shader)
+	shader.mvpMatrix = m*v --reset uniform
+
+	--cube:draw(shader)
+	--sphere:draw(shader)
+	monkey:draw(shader)
 	js.global:requestAnimationFrame(update)
+	collectgarbage()
 end
 
 update()

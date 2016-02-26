@@ -30,7 +30,6 @@ function getContext(canvas)
 	}
 	local compat = { --define opengl->webgl compatability functions
 		glGetProgramiv=function(program, value)
-			print(program, value)
 			return glObj.getProgramParameter(program, value)
 		end,
 		glGenBuffers=function(n)
@@ -40,7 +39,6 @@ function getContext(canvas)
 			return table.unpack(buffs)
 		end,
 		glBufferData=function(target, n, data, hints)
-			print("$",target, data, hints)
 			return glObj:bufferData(target, data, hints)
 		end
 	}
@@ -72,7 +70,9 @@ function getContext(canvas)
 		return sizes[type]
 	end
 
+	compat.canvas = canvas
 	compat.context=glObj
+
 	compat.sizeof=sizeof
 	compat.NULL_BUFFER=nil
 	context[canvas] = setmetatable(compat, mt), canvas

@@ -1,20 +1,18 @@
-#version 330 core
+precision highp float;
 
 attribute vec4 position;
-attribute vec4 normal;
-attribute vec4 color;
-
-varying vec4 vNormal;
-varying vec4 vColor;
-varying vec4 vPos;
+attribute vec3 normal;
 
 uniform mat4 mvpMatrix;
+uniform mat4 perspective;
+
+varying vec3 fNormal;
+varying vec3 fPosition;
 
 void main()
 {
-	gl_Position = mvpMatrix * position;
-	vPos = mvpMatrix * position;
-
-	vColor = color;
-	vNormal = normal;
+	vec4 pos = vec4(position.xyz, 1.0);
+	gl_Position = perspective * mvpMatrix * pos;
+	fNormal = (mvpMatrix * vec4(normal, 0.0)).xyz;
+	fPosition = ((mvpMatrix * pos).xyz)/pos.w;
 }

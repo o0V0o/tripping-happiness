@@ -20,6 +20,9 @@
 
 
 	<script type="text/javascript">
+		jsCallback = function(proxy){
+			return function(){ proxy(this) }
+		}
 		jsMatUniform = function(gl, program){
 			var loc = gl.getUniformLocation(program, "mvpMatrix")
 		}

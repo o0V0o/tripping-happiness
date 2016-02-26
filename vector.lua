@@ -132,7 +132,6 @@ function Vector:normalize()
 end
 
 function Vector:swizzle(str)
-	print(str, type(str))
 	if type(str)=='number' then return self.usrdata[str] end
 	assert(type(str)=='string', "must swizzle with strings!")
 	swizzletable = { x=0, r=0, y=1, g=1, z=2, b=2, w=3 }
@@ -171,6 +170,14 @@ function Vector.__mul(v1,v2)
 	else
 		return (v1:copy()):cross(v2)
 	end
+end
+function Vector.__eq(v1, v2)
+	if v1.dim ~= v2.dim then return false end
+	local usrdata1, usrdata2 = v1.usrdata, v2.usrdata
+	for i=0,v1.dim-1 do
+		if usrdata1[i] ~= usrdata2[i] then return false end
+	end
+	return true
 end
 function Vector.__tostring(v)
 	local t = {}

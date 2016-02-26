@@ -57,7 +57,6 @@ end
 
 function I.inspect(program)
 	local n = gl.glGetProgramiv(program, gl.GL_ACTIVE_ATTRIBUTES)
-	print(n)
 	--WebGLActiveInfo {name='...', size=n, type=?}
 	local attributes = {}
 	for i=0,n-1 do
@@ -67,8 +66,8 @@ function I.inspect(program)
 
 	local attributeObjs = {}
 	for k,v in pairs(attributes) do
-		print(k,v, v.name, v.size, v.type)
 		attributeObjs[v.name] = Attribute(v)
+		attributeObjs[v.name].idx = gl.glGetAttribLocation(program, v.name)
 	end
 
 	local n = gl.glGetProgramiv(program, gl.GL_ACTIVE_UNIFORMS)
@@ -80,7 +79,6 @@ function I.inspect(program)
 
 	local uniformObjs = {}
 	for k,v in pairs(uniforms) do
-		print(k,v, v.name, v.size, v.type)
 		uniformObjs[v.name] = Uniform(v)
 		uniformObjs[v.name].idx = gl.getUniformLocation(program, v.name)
 	end

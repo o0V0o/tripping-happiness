@@ -6,6 +6,8 @@ local types = require("types")
 
 if not table.unpack then table.unpack = unpack end
 
+local print = function() end
+
 
 local M = {}
 
@@ -161,12 +163,12 @@ loaders["OBJ"] = function(content)
 
 	local instructions = {}
 	instructions["v"] = function(params)
-		local v = V.vec4(tonumber(params[1]) or 0,
-						tonumber(params[2]) or 0,
-						tonumber(params[3]) or 0,
-						tonumber(params[4]) or 0)
+		local v = V.vec4(tonumber(params[1] or 0),
+						tonumber(params[2] or 0),
+						tonumber(params[3] or 0),
+						tonumber(params[4] or 1))
 		table.insert(verts, v)
-		print("v -> ",#verts,v)
+		print("vertex:",v)
 	end
 
 	instructions["vn"] = function(params)
@@ -192,7 +194,8 @@ loaders["OBJ"] = function(content)
 		local firstV,firstT,firstN
 		local lastV,lastT,lastN
 		for _,p in ipairs(params) do
-			local vertInd, texInd, normInd = table.unpack( split(p,"([^/]*)/?") )
+			--local vertInd, texInd, normInd = table.unpack( split(p,"([^/]*)/?") )
+			local vertInd, textInd, normInd = p:match("(%d*)/(%d*)/(%d*)")
 			vertInd = absInd(tonumber(vertInd), verts)
 			texInd = absInd(tonumber(texInd), texcoords)
 			normInd = absInd(tonumber(normInd), normals)
@@ -238,8 +241,9 @@ loaders["OBJ"] = function(content)
 		print(k,v)
 	end
 	print( table.unpack(args))
+	print("Attributes Loaded From Obj", #verts, #vertInds, #texcoords, #texInds, #normals, #normInds)
 	--local mesh = M.meshanize(table.unpack( args))
-	local mesh = M.meshanize(verts, vertInds, "texcoord", texcoords, texInds, "normal", normals, normalInds)
+	local mesh = M.meshanize(verts, vertInds, "texcoord", texcoords, texInds, "normal", normals, normInds)
 	--local mesh = M.meshanize(verts, vertInds, "blah", {}, normInds)
 	--local mesh = M.meshanize(verts, vertInds) 
 	print("done loading obj")
