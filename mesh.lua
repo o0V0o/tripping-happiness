@@ -10,13 +10,14 @@ local print = function() end
 
 
 local M = {}
+local Mesh = class()
 
-function map(list, func)
+local function map(list, func)
 	for k,v in ipairs(list) do
 		list[k] = func(v)
 	end
 end
-function split(p, pattern)
+local function split(p, pattern)
 	local t = {}
 	for m in p:gmatch(pattern) do
 		table.insert(t, m)
@@ -24,22 +25,22 @@ function split(p, pattern)
 	return t
 end
 
-function distancePtPt(p1,p2)
+local function distancePtPt(p1,p2)
 	return (p2-p1):len()
 end
-function distancePtLine(pt, ro, rd)
+local function distancePtLine(pt, ro, rd)
 	-- taken from http://onlinemschool.com/math/library/analytic_geometry/p_line/
 	print(pt, ro, rd)
 	return math.abs(  (pt-ro):cross(rd):len() / rd:len()  )
 end
-function distancePtPlane(pa, pb, n)
+local function distancePtPlane(pa, pb, n)
 	-- taken from http://paulbourke.net/geometry/pointlineplane/
 	local D = -1 * (n.x*pb.x + n.y*pb.y + n.z+pb.z)
 	local dist = math.abs((n.x*pa.x + n.y*pa.y + n.z*pa.z + D) / n:len())
 	print("Pt-Plane:", pa,pb,n,dist)
 	return dist
 end
-function distance(pt, pts)
+local function distance(pt, pts)
 	if pts.super == V.Vector then
 		return distancePtPt(pt,pts)
 	elseif #pts==2 then
@@ -74,77 +75,48 @@ function M.normalize(verts, vertInds)
 	end
 	return normals, normInds
 end
---function M.meshanize(verts, VertInds, ...) return Mesh
--- Create a mesh from vertices and attributes, where each attribute has its own element index array.
--- example call: meshanizer(vertexArray, vertexElementIndexArray, "normal", normalArray, normalElementArray, "texcoord", texcoordArray, texcoordElementArray)
+--function M.meshanize(Table attributes) return Mesh
+-- Create a mesh from vertices and attributes, where each attribute has its own element index array (all of the same size).
+-- each attribute in the table is of the form attributes[name]={inds=[Int], pts=[Vector]}
 --
-function M.meshanize(verts, vertInds, ...)
-	print("meshanizing:",verts, vertInds, ...)
-	for k,v in ipairs(verts) do
-		print("verts:", k, v)
-	end
-	for k,v in ipairs(vertInds) do
-		print("inds:", k, v)
-	end
-	local args = {...}
-	local attribNames = {}
-	local attribBuffers = {}
-	local attribInds = {}
+function M.meshanize(attributes)
+	local meshAttributes={}
 
-	local meshVerts = {}
+	local nIdx = 0
+	for name,attrib in pairs(attributes) do
+		print("attribute", name, #attrib.pts, #attrib.inds)
+		nIdx = #attrib.inds
+		meshAttributes[name]={}
+	end
+
+	local nextidx = 0
 	local meshInds = {}
-	local meshAttributes = {}
-	local meshIndTransform = {}
-	--local meshIndTransform = ListTable((#args/3)+1) --lookup table to go from vertex+attribute indices -> real mesh index
-
-	local function addMeshVert(vertInd, ...)
-			table.insert(meshVerts, verts[vertInd])
-			for i,ind in ipairs({...}) do
-				table.insert(meshAttributes[attribNames[i]], attribBuffers[i][ind])
-			end
-			print("new mesh vert:", #meshVerts)
-			return #meshVerts-1
-	end
-
-	-- get the real index of the point matching all the specified index values.
-	-- If a vertex does not already exist that matches these indeces, then make
-	-- one.
-	local function indexOf(vertInd, ...)
-		assert(vertInd)
-		local args = {...}
-		if #args == 0 then meshIndTransform[vertInd] = addMeshVert( vertInd, ...) end
-		if not meshIndTransform[vertInd] then meshIndTransform[vertInd]={} end
-		local t = meshIndTransform[vertInd]
-		for i, ind in ipairs(args) do
-			if not t[ind] and i~=#args then t[ind]={} end
-			if not t[ind] and i==#args then
-				t[ind] = addMeshVert(vertInd, ...)
-			end
-			t = t[ind]
+	local lut = {} --simple lookup table for already created verts
+	print(next(attributes))
+	for idx=1,nIdx do
+		local lutstr = {}
+		for name,attrib in pairs(attributes) do
+			table.insert(lutstr,attrib.inds[idx])
 		end
-		return t
-	end
-
-
-
-	for i=1,#args,3 do
-		local name = args[i]
-		local pts = args[i+1]
-		local ind = args[i+2]
-		table.insert(attribNames, name)
-		attribBuffers[#attribNames]=pts
-		attribInds[#attribNames]=ind
-		meshAttributes[name] = {}
-	end
-	for i,vertInd in ipairs(vertInds) do
-		local t = {}
-		for _,inds in ipairs(attribInds) do
-			table.insert(t, inds[i])
+		lutstr = table.concat(lutstr)
+		local realidx = lut[lutstr]
+		if not realidx then
+			for name,attrib in pairs(attributes) do
+				meshAttributes[name][nextidx+1]=attrib.pts[attrib.inds[idx]]
+				print(nextidx, name, meshAttributes[name][nextidx+1])
+				if name=='texcoord' then
+					print(#attrib.inds, attrib.inds[idx])
+					print(attrib.pts, #attrib.pts, attrib.pts[1])
+				end
+			end
+			realidx = nextidx
+			lut[lutstr] = realidx
+			nextidx = nextidx+1
 		end
-		table.insert(meshInds, indexOf(vertInd, table.unpack(t)))
+		table.insert(meshInds, realidx)
 	end
-	print("Making Mesh:", table.unpack(meshInds))
-	return Mesh(meshVerts, meshInds, meshAttributes)
+
+	return Mesh(meshInds, meshAttributes)
 end
 
 local loaders = {}
@@ -182,7 +154,8 @@ loaders["OBJ"] = function(content)
 	end
 	instructions["vt"] = function(params)
 		assert(params[1]);assert(params[2])
-		local v = V.Vector( tonumber(params[1]),
+		local v = V.Vector( nil,
+							tonumber(params[1]),
 							tonumber(params[2]),
 							tonumber(params[3]))
 		table.insert(texcoords, v)
@@ -195,7 +168,7 @@ loaders["OBJ"] = function(content)
 		local lastV,lastT,lastN
 		for _,p in ipairs(params) do
 			--local vertInd, texInd, normInd = table.unpack( split(p,"([^/]*)/?") )
-			local vertInd, textInd, normInd = p:match("(%d*)/(%d*)/(%d*)")
+			local vertInd, texInd, normInd = p:match("(%d*)/(%d*)/(%d*)")
 			vertInd = absInd(tonumber(vertInd), verts)
 			texInd = absInd(tonumber(texInd), texcoords)
 			normInd = absInd(tonumber(normInd), normals)
@@ -215,7 +188,7 @@ loaders["OBJ"] = function(content)
 	end
 
 	for line in content:gmatch(".-\n") do
-		params = split(line, "%S+")
+		local params = split(line, "%S+")
 		local cmd = table.remove(params, 1)
 		if instructions[cmd] then
 			instructions[cmd](params)
@@ -238,14 +211,20 @@ loaders["OBJ"] = function(content)
 		table.insert(args, normInds)
 	end
 	for k,v in ipairs(args) do
-		print(k,v)
+		if type(v)=='table' then
+			print(k,v,#v)
+		else
+			print(k,v)
+		end
 	end
-	print( table.unpack(args))
 	print("Attributes Loaded From Obj", #verts, #vertInds, #texcoords, #texInds, #normals, #normInds)
-	--local mesh = M.meshanize(table.unpack( args))
-	local mesh = M.meshanize(verts, vertInds, "texcoord", texcoords, texInds, "normal", normals, normInds)
-	--local mesh = M.meshanize(verts, vertInds, "blah", {}, normInds)
-	--local mesh = M.meshanize(verts, vertInds) 
+	local attributes = {
+		position={inds=vertInds, pts=verts},
+		texcoord={inds=texInds, pts=texcoords},
+		normal={inds=normInds, pts=normals}
+	}
+	local mesh = M.meshanize(attributes)
+
 	print("done loading obj")
 	return mesh
 end
@@ -259,20 +238,18 @@ function M.load(fname)
 	error("No loader present for " .. ext .. " filetype.")
 end
 
-Mesh = class()
---constructor Mesh([Vector] vertArray, [Int] elementIndexArray, Table attributes) 
+--constructor Mesh([Int] elementIndexArray, Table attributes) 
 --return Mesh a new Mesh object with the given vertices, that form faces as described in the *elementIndexArray*
 --The constructed Mesh object has a set of attributes, such as normals, texure coordinates, etc, that can be passed 
 --as a table in the following format:
 --	{ "attributeName" = vectorArray, ... }
 --	such that each vectorArray is the *same size*, indexed by ind per face
 --example: Mesh( {vec3(1,0,0),vec3(1,1,1),vec3(0,1,1)}, {1,2,3}, {normal={vec3(1,0,0),vec3(0,0,1),vec3(0,1,0)},texcoord={vec2(0,0),vec2(1,1),vec2(.5,.5)}})
-function Mesh:__init(verts, ind, attributes)
+function Mesh:__init(ind, attributes)
 	self.transform = Matrix.identity(4)
-	self.verts = verts
+	self.verts = attributes.position
 	self.indices = ind
 	self.attributes = attributes or {}
-	self.attributes["position"] = verts
 	if self.verts[1].dim == 3 then
 		for k,v in pairs(self.verts) do
 			self.verts[k] = V.vec4( v, 1) -- add W component.

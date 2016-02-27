@@ -1,7 +1,7 @@
 local ctypes = require('ctypes')
 
 local context = {}
-function getContext(canvas)
+local function getContext(canvas)
 
 	canvas=canvas or js.global.glCanvas or "GLCanvas"
 	if context[canvas] then return context[canvas] end
@@ -29,6 +29,13 @@ function getContext(canvas)
 		[glObj.INT_VEC4] = 16,
 	}
 	local compat = { --define opengl->webgl compatability functions
+		glTexImage2D=function(texdim, level, informat, width, height, border, format, datatype, data)
+			if js.global:jsInstanceOf(data, js.global.Image) then
+				glObj:texImage2D(texdim, level, informat, format, datatype, data)
+			else
+				glObj:texImage2D(texdim, level, informat, width, height, border, format, datatype, data)
+			end
+		end,
 		glGetProgramiv=function(program, value)
 			return glObj.getProgramParameter(program, value)
 		end,
@@ -69,10 +76,19 @@ function getContext(canvas)
 	local function sizeof(type)
 		return sizes[type]
 	end
+	--attempt to lookup the name of the given constant value
+	local function constant(c)
+		local keys = js.global.Object:getOwnPropertyNames(glObj.__proto__)
+		for _,name in pairs( keys ) do
+			if glObj[name]==c then return name end
+		end
+		return "unknown/unused"
+	end
 
 	compat.canvas = canvas
 	compat.context=glObj
 
+	compat.constant = constant
 	compat.sizeof=sizeof
 	compat.NULL_BUFFER=nil
 	context[canvas] = setmetatable(compat, mt), canvas

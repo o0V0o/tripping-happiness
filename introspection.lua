@@ -8,6 +8,7 @@ local Attribute = class()
 function Attribute:__init(info)
 	self.name = info.name
 	self.type = info.type
+	self.typename = gl.constant(info.type)
 	self.size = info.size
 end
 function Attribute:__tostring()
@@ -32,8 +33,13 @@ local setters = {
 	[gl.GL_INT_VEC2]=function(self,v) gl.glUniform2iv(self.idx, ctypes.intArray(v)) end,
 	[gl.GL_INT_VEC3]=function(self,v) gl.glUniform3iv(self.idx, ctypes.intArray(v)) end,
 	[gl.GL_INT_VEC4]=function(self,v) gl.glUniform4iv(self.idx, ctypes.intArray(v)) end,
-	[gl.GL_FLOAT_MAT4]=function(self,v) gl.glUniformMatrix4fv(self.idx, false, v.usrdata) end
+	[gl.GL_FLOAT_MAT4]=function(self,v) gl.glUniformMatrix4fv(self.idx, false, v.usrdata) end,
+
+	[gl.GL_SAMPLER_2D]=function(self,v) gl.glUniform1i(self.idx, v) end
 }
+setters = setmetatable(setters, {__index=function(t,k)
+	return function(self,v) print("no such uniform handler", gl.constant(k)) end
+end})
 
 local Uniform = class()
 function Uniform:__init(info)

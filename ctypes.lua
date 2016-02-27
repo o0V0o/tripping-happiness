@@ -3,7 +3,7 @@ local c={}
 --checks if a table is given, of if a number is given
 --if a number is given, it makes a table of zeros, with a length equal to the
 --number specified
-function fillarray(tbl)
+local function fillarray(tbl)
 	if type(tbl) == 'number' then
 		local tmp = {}
 		for i=1,tbl do 

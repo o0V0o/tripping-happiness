@@ -4,7 +4,7 @@ local class = require("object")
 local introspection = require("introspection")
 
 local currentProgram
-Shader = class()
+local Shader = class()
 function Shader:__init(vFile, fFile)
 	self.prog = loadShader(vFile, fFile)
 	local attributes, uniforms = introspection.inspect(self.prog)
@@ -32,7 +32,7 @@ function Shader:__newindex(key, value)
 			self.uniforms[key]:set(value)
 		end
 	elseif self.loaded then
-		print("can't set uniform", key)
+		print("no such uniform exists (may be unused)", key)
 	else
 		rawset(self, key, value)
 	end

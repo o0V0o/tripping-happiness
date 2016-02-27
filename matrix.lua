@@ -32,7 +32,7 @@ function M.lookat(eye, at, up)
 	if eye==at then return M.identity(4) end
 
 	local M=Matrix(4,4)
-	mdata = M.usrdata
+	local mdata = M.usrdata
 	mdata [ 0 ] = n.x
 	mdata [ 4 ] = n.y
 	mdata [ 8 ] = n.z

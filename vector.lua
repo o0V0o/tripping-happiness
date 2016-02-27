@@ -4,13 +4,14 @@ local ctypes = require'ctypes'
 local V = {}
 local Vector = class(nil, function(self,pri,key) return self:swizzle(key) end)
 
-function V.vec1(x) if type(x)=="number" then return Vector(x or 0) else return V.Vector(x) end end
+function V.vec1(x) if type(x)=="number" then return Vector(x or 0) else return V.Vector(1,x) end end
 function V.vec2(x,y) if type(x)=="number" and type(y)=="number" then return Vector(x,y) else return V.Vector(2,x,y) end end
 function V.vec3(x,y,z) if type(x)=="number" and type(y)=="number" and type(z)=="number" then return Vector(x,y,z) else return V.Vector(3,x,y,z) end end
 function V.vec4(x,y,z,w) if type(x)=="number" and type(y)=="number" and type(z)=="number" and type(w)=="number" then return Vector(x,y,z,w) else return V.Vector(4,x,y,z,w) end end
 
 function V.Vector(dim,...)
 	local args = {...}
+	dim = dim or #args
 	local params = {}
 	local i=1
 	while #params<dim do
@@ -131,12 +132,12 @@ function Vector:normalize()
 	return self
 end
 
+local swizzletable = { x=0, r=0, y=1, g=1, z=2, b=2, w=3 }
 function Vector:swizzle(str)
 	if type(str)=='number' then return self.usrdata[str] end
 	assert(type(str)=='string', "must swizzle with strings!")
-	swizzletable = { x=0, r=0, y=1, g=1, z=2, b=2, w=3 }
 	local usrdata = self.usrdata
-	values = {}
+	local values = {}
 	for c in str:gmatch(".") do
 		table.insert(values, usrdata[ swizzletable[c] ] )
 	end

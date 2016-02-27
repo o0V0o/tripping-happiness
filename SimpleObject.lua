@@ -5,16 +5,11 @@ local VBO = require('vbo')
 local EAB = require('eab')
 
 --maps mesh parameters to shader attribute names
-local defaultMap = {
-	position = 'position',
-	normal = 'normal',
-	texcoord = 'texcoord'
-}
+local defaultMap = setmetatable({}, {__index=function(t,k) return k end})
 
 local O = class()
 function O:__init(mesh, attributeMap)
 	--print("Simple Object created:", mesh)
-	self.attributeMap = attributeMap or defaultMap
 	self.mesh = mesh
 end
 local function flatten(pts)
@@ -26,19 +21,22 @@ local function flatten(pts)
 	end
 	return buffer
 end
-function O:recalculate(shader) 
+function O:recalculate(shader, attributeMap)
+	attributeMap = attributeMap or defaultMap
+	self.attributeMap = attributeMap
 	print("calculating")
 	self.vbos = {}
 	self.eab = EAB()
-	for mesh_attrib,shader_attrib in pairs(self.attributeMap) do
-		local attribute = shader.attributes[shader_attrib]
-		if attribute then
-			local data = self.mesh.attributes[mesh_attrib]
-			assert(data and #data>0, "no such attribute in mesh")
-			self.vbos[mesh_attrib] = VBO(gl.GL_FLOAT, gl.GL_STATIC_DRAW)
-			self.vbos[mesh_attrib]:bufferData( ctypes.floatArray( flatten(data)) )
-			self.vbos[mesh_attrib]:useForAttribute(attribute)
-		end
+	for name,attribute in pairs(shader.attributes) do
+		local mesh_attrib = attributeMap[name]
+		print("calculating attribute", name,"mesh=", mesh_attrib)
+		assert(mesh_attrib, "no mapping for attribute")
+		local data = self.mesh.attributes[mesh_attrib]
+		assert(data and #data>0, "no such attribute in mesh")
+		self.vbos[mesh_attrib] = VBO(gl.GL_FLOAT, gl.GL_STATIC_DRAW)
+		print("attrib size", attribute.size, attribute.typename, "mesh size", data[1].dim)
+		self.vbos[mesh_attrib]:bufferData( ctypes.floatArray( flatten(data)) )
+		self.vbos[mesh_attrib]:useForAttribute(attribute)
 	end
 	print("eab buffering...")
 	self.eab:bufferData( ctypes.shortArray( self.mesh.indices ) )
