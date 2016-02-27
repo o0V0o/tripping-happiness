@@ -28,9 +28,8 @@ local shader = Shader("shaders/textured.vs", "shaders/textured.fs")
 
 
 local cubemesh = M.load("cube.obj")
-local spheremesh, monkeymesh = cubemesh, cubemesh
---local spheremesh = M.load("sphere.obj")
-local monkeymesh = M.load("suzanne-cubemap.obj")
+local monkeymesh = M.load("suzanne.obj")
+--local monkeymesh = M.load("suzanne-cubemap.obj")
 --local monkeymesh = M.load("suzanne-cylindermap.obj")
 
 local attributeMap = {
@@ -40,7 +39,6 @@ local attributeMap = {
 }
 
 local cube = SimpleObject( cubemesh )
-local sphere = SimpleObject( spheremesh )
 local monkey = SimpleObject( monkeymesh )
 
 local update
@@ -57,7 +55,6 @@ gl.glClearColor(1,1,1,1)
 G:clear()
 for k,v in pairs(cube.mesh.attributes) do print(k,v,#v) end
 cube:recalculate(shader, attributeMap)
-sphere:recalculate(shader, attributeMap)
 monkey:recalculate(shader, attributeMap)
 
 shader.color = {1,0,0} --set color to red.
@@ -101,7 +98,6 @@ function update()
 	shader.model = m
 
 	--cube:draw(shader)
-	--sphere:draw(shader)
 	monkey:draw(shader)
 	js.global:requestAnimationFrame(update)
 end
