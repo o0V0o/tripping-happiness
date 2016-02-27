@@ -30,8 +30,8 @@ local shader = Shader("shaders/textured.vs", "shaders/textured.fs")
 local cubemesh = M.load("cube.obj")
 local spheremesh, monkeymesh = cubemesh, cubemesh
 --local spheremesh = M.load("sphere.obj")
---local monkeymesh = M.load("suzanne-cubemap.obj")
-local monkeymesh = M.load("suzanne-cylindermap.obj")
+local monkeymesh = M.load("suzanne-cubemap.obj")
+--local monkeymesh = M.load("suzanne-cylindermap.obj")
 
 local attributeMap = {
 	position = 'position',
