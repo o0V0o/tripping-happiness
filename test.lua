@@ -53,28 +53,25 @@ end)
 shader:use()
 gl.glClearColor(1,1,1,1)
 G:clear()
-for k,v in pairs(cube.mesh.attributes) do print(k,v,#v) end
+
 cube:recalculate(shader, attributeMap)
 monkey:recalculate(shader, attributeMap)
 
 shader.color = {1,0,0} --set color to red.
 shader.specColor = {1,1,1}
-shader.shininess = 1500
+shader.shininess = 1000
 shader.kDiffuse = 1
 shader.kSpecular = 1.5
 shader.kAmbient = 0.3
 
 print("done")
 
-local mvp = Matrix.identity(4)
 local theta = 0
 
-local z = -10
-local p = Matrix.perspective(0.1,100,1,45)
-local v = Matrix.lookat( vec3(3,3,3), vec3(0,0,0), vec3(0,1,0) )
+local v = Matrix.lookat( vec3(3,2,3), vec3(0,0,0), vec3(0,1,0) )
 local m = Matrix.rotate( vec3(0,1,0), theta )
+
 local up = vec3(0,1,0)
-shader.perspective = p
 shader.view = v
 
 local last, frames = 0,0
@@ -92,6 +89,7 @@ function update()
 	theta = theta + .05
 	m:rotate( up, 0.05 )
 	shader.model = m
+	shader.perspective = Matrix.perspective(0.1,100,gl.canvas.clientWidth/gl.canvas.clientHeight,45)
 	shader.diffuseTexture = t:activate()
 
 	--shader.mvpMatrix = m*v --reset uniform

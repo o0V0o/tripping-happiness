@@ -4,7 +4,7 @@ local gl = require("openGL")
 local Texture = class()
 
 function Texture:__init(format, wrapmode, minfilter, magfilter, mipmap)
-	self.format = self.format or gl.GL_RGB
+	self.format = self.format or gl.GL_RGBA
 	self.wrapmode = wrapmode or gl.GL_REPEAT
 	self.minfilter = minfilter or (mipmap and gl.GL_LINEAR_MIPMAP_LINEAR) or gl.GL_LINEAR
 	self.magfilter = magfilter or gl.GL_LINEAR
