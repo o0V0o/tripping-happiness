@@ -1,4 +1,4 @@
-
+-- this module provides some basic datatypes that are often usefull..
 local DefaultTable = {}
 DefaultTable.__index = DefaultTable
 setmetatable(DefaultTable, DefaultTable)
@@ -125,6 +125,7 @@ function Tree.concat(left, right)
 	return Tree.new("CONCAT", children)
 end
 -- function Tree.print(Tree self) Print the tree to stdout
+--
 function Tree.print(self, indent)
 	local indent = indent or ""
 	local val = tostring(self.val) or "EMPTY"

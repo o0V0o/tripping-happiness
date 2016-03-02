@@ -1,4 +1,6 @@
-local gl = require("OpenGl") --load a file that abstracts away where/how/what opengl is
+--this module provides helper functions to draw 2D shapes out of triangles.
+--
+local gl = require("OpenGl")
 local vec2 = require("vector").vec2
 local sin, cos, tan = math.sin, math.cos, math.tan
 

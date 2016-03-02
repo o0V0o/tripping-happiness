@@ -1,3 +1,6 @@
+-- this module provides helper functions to create native types for things like
+-- buffers, vectors, and matrices. 
+--
 local c={}
 
 --checks if a table is given, of if a number is given

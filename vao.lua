@@ -1,3 +1,5 @@
+-- VAO's are not supported in webgl....
+--
 local gl = require("OpenGl") --load a file that abstracts away where/how/what opengl is
 local class = require('object')
 

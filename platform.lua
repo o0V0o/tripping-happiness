@@ -1,4 +1,5 @@
---platform for webgl
+--Thsi module provides platform specific functions such as getting the system
+--time, loading an image file, and initializing any windows/contexts etc.
 --
 
 local gl = require("openGL")

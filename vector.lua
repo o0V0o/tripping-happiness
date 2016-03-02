@@ -157,6 +157,9 @@ end
 function Vector.__unm(v)
 	return (v:copy()):negate()
 end
+function Vector.__len(v)
+	return v:len()
+end
 function Vector.__add(v1,v2)
 	return (v1:copy()):add(v2)
 end
@@ -169,7 +172,7 @@ function Vector.__mul(v1,v2)
 	elseif type(v2) == "number" then
 		return (v1:copy()):scale(v2)
 	else
-		return (v1:copy()):cross(v2)
+		error("Vector multiplication on incompatible types")
 	end
 end
 function Vector.__eq(v1, v2)
@@ -192,4 +195,25 @@ function Vector.__tostring(v)
 	return table.concat(t)
 end
 
+function V.cross(v1,v2)
+	return v1:copy():cross(v2)
+end
+function V.dot(v1,v2)
+	return v1:dot(v2)
+end
+function V.add(v1,v2)
+	return v1:copy():add(v2)
+end
+function V.sub(v1,v2)
+	return v1:copy():sub(v2)
+end
+function V.mult(v1,v2)
+	if type(v1)=='number' then
+		return (v2:copy()):scale(v1)
+	elseif type(v2)=='number' then
+		return (v1:copy()):scale(v2)
+	else
+		error("attempt to multiply incompatable types")
+	end
+end
 return V

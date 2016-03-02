@@ -1,3 +1,5 @@
+-- this module provides capabilities to introspect a compiled shader program in
+-- order to get uniform and attribute names, types, and locations.
 local gl = require("openGL")
 local ctypes = require("ctypes")
 local class = require("object")

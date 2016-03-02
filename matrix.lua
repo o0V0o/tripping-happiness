@@ -25,8 +25,8 @@ function M.identity(dim)
 end
 function M.lookat(eye, at, up)
 	local v = (at-eye):normalize()
-	local n = (v*up):normalize()
-	local u = (n*v):normalize()
+	local n = v:copy():cross(up):normalize()
+	local u = n:copy():cross(v):normalize()
 	v=-v
 
 	if eye==at then return M.identity(4) end
@@ -36,7 +36,7 @@ function M.lookat(eye, at, up)
 	mdata [ 0 ] = n.x
 	mdata [ 4 ] = n.y
 	mdata [ 8 ] = n.z
-	mdata [ 12] = -n:dot(eye)
+	mdata [12 ] = -n:dot(eye)
 	mdata [ 1 ] = u.x
 	mdata [ 5 ] = u.y
 	mdata [ 9 ] = u.z
@@ -68,7 +68,7 @@ function M.perspective(near, far, aspect, fov)
 	return self
 end
 
-function Matrix.__init(self,dim1, dim2)
+function Matrix:__init(dim1, dim2)
 	assert(dim1 and dim2, "Matrix.new: not enough dimensions given")
 	self.usrdata = ctypes.floatArray( dim1*dim2 )
 	           --col, row
@@ -143,20 +143,34 @@ end
 
 --function M.rotate(quaternion) return Mat2 represents the quaternion rotation as a 4x4 transformation matrix
 function M.rotateq(q)
-	M = Matrix(4,4)
-	mdata = M.usrdata
+	local M = Matrix(4,4)
+	local mdata = M.usrdata
+	local i = q.imaginary.x
+	local j = q.imaginary.y
+	local k = q.imaginary.z
+	local r = q.real
 
-	mdata[0] = 1 - 2*q.y*q.y - 2*q.z*q.z
-	mdata[1] = 2*q.x*q.y + 2*q.z*q.w
-	mdata[2] = 2*q.x*q.z - 2*q.y*q.w
 
-	mdata[4] = 2*q.x*q.y - 2*q.z*q.w
-	mdata[5] = 1 -2*q.x*q.x - 2*q.z*q.z
-	mdata[6] = 2*q.y*q.z + 2*q.x*q.w
+	mdata[0] = 1 - 2*j*j - 2*k*k
+	mdata[1] = 2*(i*j + k*r)
+	mdata[2] = 2*(i*k - j*r)
+	mdata[3] = 0
 
-	mdata[8] = 2*q.x*q.z + 2*q.y*q.w
-	mdata[9] = 2*q.y*q.z - 2*q.x*q.w
-	mdata[10]= 1 - 2*q.x*q.x - 2*q.y*q.y
+	mdata[4] = 2*(i*j - k*r)
+	mdata[5] = 1 - 2*i*i - 2*k*k
+	mdata[6] = 2*(j*k + i*r)
+	mdata[7] = 0
+
+	mdata[8] = 2*(i*k + j*r)
+	mdata[9] = 2*(j*k - i*r)
+	mdata[10]= 1 - 2*i*i - 2*j*j
+	mdata[11] = 0
+	
+	mdata[12] = 0
+	mdata[13] = 0
+	mdata[14] = 0
+	mdata[15] = 1
+	return M
 end
 --function M.rotate(axis, angle) return Mat4 represents the rotation as a 4x4 transformation matrix
 function M.rotate(v,theta)
