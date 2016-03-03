@@ -2,7 +2,9 @@ local class = require'object'
 local ctypes = require'ctypes'
 
 local V = {}
+local swizzletable = { x=0, r=0, y=1, g=1, z=2, b=2, w=3 }
 local Vector = class(nil, function(self,pri,key) return self:swizzle(key) end)
+
 
 function V.vec1(x) if type(x)=="number" then return Vector(x or 0) else return V.Vector(1,x) end end
 function V.vec2(x,y) if type(x)=="number" and type(y)=="number" then return Vector(x,y) else return V.Vector(2,x,y) end end
@@ -132,7 +134,6 @@ function Vector:normalize()
 	return self
 end
 
-local swizzletable = { x=0, r=0, y=1, g=1, z=2, b=2, w=3 }
 function Vector:swizzle(str)
 	if type(str)=='number' then return self.usrdata[str] end
 	assert(type(str)=='string', "must swizzle with strings!")

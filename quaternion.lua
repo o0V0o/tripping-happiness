@@ -71,18 +71,17 @@ function Q:__tostring()
 	return table.concat(t)
 end
 
-function Q:rotate(axis, angle)
-	local q2 = Q(axis:copy():normalize()*math.sin(angle/2), math.cos(angle/2))
-
-	return self:mult(q2):normalize()
+function Q.axisAngle(axis, angle)
+	return Q(axis:copy():normalize()*math.sin(angle/2), math.cos(angle/2))
 end
 
-function Q.mult(a,b)
+function Q.mult(a,b,c)
+	if not c then c=Q() end
 	local real = (a.real*b.real - dot(a.imaginary,b.imaginary))
 	local imaginary = a.real*b.imaginary + b.real*a.imaginary + cross(a.imaginary,b.imaginary)
-	a.real = real
-	a.imaginary = imaginary
-	return a
+	c.real = real
+	c.imaginary = imaginary
+	return c
 end
 
 function Q:rotation()
@@ -95,7 +94,7 @@ function Q:rotation()
 end
 
 function Q.__mul(a,b)
-	return a:copy():mult(b)
+	return a:mult(b)
 end
 
 function Q:copy()
