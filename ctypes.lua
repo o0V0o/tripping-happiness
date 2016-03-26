@@ -38,7 +38,7 @@ function c.floatArray(tbl)
 end
 
 function c.copy(v2)
-	return v2:slice()
+	return v2:slice(0)
 end
 
 return c
