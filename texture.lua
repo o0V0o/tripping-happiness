@@ -25,14 +25,17 @@ function Texture:__init(format, wrapmode, minfilter, magfilter, mipmap)
 end
 
 function Texture:attachTextureUnit()
-	if self.texunitIdx then return end --if we already have  texture unit, do nothing.
-	--find the next available texture unit and use it for this texture.
-	local idx = assert(findNextTextureUnit(activeTextureUnits), "can not active texture: no free texture unit")
-	self.texunit = "GL_TEXTURE"..idx
-	self.texunitIdx = idx
-	activeTextureUnits[idx] = true
+	if not self.texunitIdx then 
+		--find the next available texture unit and use it for this texture.
+		local idx = assert(findNextTextureUnit(activeTextureUnits), "can not active texture: no free texture unit")
+		self.texunit = "GL_TEXTURE"..idx
+		self.texunitIdx = idx
+		activeTextureUnits[idx] = true
 
-	self:setMode(self.wrapmode, self.minfilter, self.magfilter, self.mipmap)
+		self:setMode(self.wrapmode, self.minfilter, self.magfilter, self.mipmap)
+	end
+
+	return self.texunitIdx
 end
 
 function Texture:releaseTextureUnit()
@@ -58,12 +61,13 @@ end
 
 
 function Texture:unbind()
-	assert(self.texunit, "attempt to unbind texture with no associated texture unit!")
-	gl.glActiveTexture(gl[self.texunit]) --make sure we affect the right texture unit...
-	gl.glBindTexture( self.target, gl.NULL_BUFFER )
+	if self.texunit then
+		gl.glActiveTexture(gl[self.texunit]) --make sure we affect the right texture unit...
+		gl.glBindTexture( self.target, gl.NULL_BUFFER )
+	end
 end
 function Texture:bind()
-	assert(self.texunit, "attempt to bind texture with no associated texture unit!")
+	self:attachTextureUnit()
 	gl.glActiveTexture(gl[self.texunit]) --make sure we affect the right texture unit...
 	gl.glBindTexture( self.target, self.texture )
 end
