@@ -29,24 +29,22 @@ function O:recalculate(shader, attributeMap)
 	self.eab = EAB()
 	for name,attribute in pairs(shader.attributes) do
 		local mesh_attrib = attributeMap[name]
-		print("calculating attribute", name,"mesh=", mesh_attrib)
 		assert(mesh_attrib, "no mapping for attribute")
 		local data = self.mesh.attributes[mesh_attrib]
 		assert(data and #data>0, "no such attribute in mesh")
 		self.vbos[mesh_attrib] = VBO(gl.GL_FLOAT, gl.GL_STATIC_DRAW)
-		print("attrib size", attribute.size, attribute.typename, "mesh size", data[1].dim, gl.sizeof(attribute.type))
 		self.vbos[mesh_attrib]:bufferData( ctypes.floatArray( flatten(data)) )
 	end
-	print("eab buffering...")
 	self.eab:bufferData( ctypes.shortArray( self.mesh.indices ) )
 	print("calculated.")
+	return self
 end
 function O:draw(shader)
 	assert(self.eab, "need to recalculate SimpleObject before draw")
 	self.eab:bind()
 	for name,attribute in pairs(shader.attributes) do
 		local mesh_attrib = self.attributeMap[name]
-		if self.mesh.attributes[mesh_attrib] then
+		if self.vbos[mesh_attrib] then
 			self.vbos[mesh_attrib]:useForAttribute(attribute)
 		end
 	end

@@ -34,6 +34,7 @@ local function getContext(canvas)
 				glObj:texImage2D(texdim, level, informat, format, datatype, data)
 			else
 				glObj:texImage2D(texdim, level, informat, width, height, border, format, datatype, data)
+				--glObj:texImage2D(glObj.TEXTURE_2D, 0, glObj.RGBA, width, height, 0, glObj.RGBA, glObj.UNSIGNEDBYTE, js.global:jsInt16Array({}))
 			end
 		end,
 		glGetProgramiv=function(program, value)

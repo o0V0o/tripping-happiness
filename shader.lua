@@ -16,10 +16,6 @@ function Shader:__init(vFile, fFile)
 		attribute.stride = offset
 		offset = offset + gl.sizeof(attribute.type)
 	end
-	for _,attribute in pairs(self.attributes) do
-		print("enabling attribute", attribute.name)
-		gl.enableVertexAttribArray( attribute.idx )
-	end
 	self.loaded = true --indicates that further table acess will go to uniforms
 end
 function Shader:destroy()
@@ -43,6 +39,10 @@ function Shader:use()
 	currentProgram = self.prog
 	for key,value in pairs(self.uniformValues) do
 			self.uniforms[key]:set(value)
+	end
+	for _,attribute in pairs(self.attributes) do
+		print("enabling shader attribute", attribute.name)
+		gl.enableVertexAttribArray( attribute.idx )
 	end
 end
 function Shader:active()

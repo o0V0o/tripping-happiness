@@ -2,6 +2,7 @@
 function sliceShim(begin, end){
 	//use sane defaults
 	begin = begin || 0
+	console.log("shim!", end, this.length)
 	end = Math.min(end, this.length) || this.length
 	// handle negative values
 	begin = (begin >= 0) ? begin : Math.max(0, this.length+begin)

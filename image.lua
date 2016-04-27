@@ -31,7 +31,7 @@ Image.Empty = class(Image)
 function Image.Empty:__init(width, height)
 	self.width = width
 	self.height = height
-	self.data = nil
+	self.data = js.global.null
 	self.loaded = true
 	self.datatype = gl.GL_UNSIGNED_BYTE
 end

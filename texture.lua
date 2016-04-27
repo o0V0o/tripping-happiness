@@ -47,13 +47,9 @@ end
 --set the correct mode values in opengl
 function Texture:setMode(wrapmode, minfilter, magfilter, mipmap)
 	self:bind()
-	print(".")
 	gl.glTexParameteri(self.target, gl.GL_TEXTURE_WRAP_S, wrapmode)
-	print(".")
 	gl.glTexParameteri(self.target, gl.GL_TEXTURE_WRAP_T, wrapmode)
-	print(".")
 	gl.glTexParameteri(self.target, gl.GL_TEXTURE_MIN_FILTER, minfilter)
-	print(".")
 	gl.glTexParameteri(self.target, gl.GL_TEXTURE_MAG_FILTER, magfilter)
 	self:unbind()
 end
@@ -70,6 +66,7 @@ function Texture:bind()
 	self:attachTextureUnit()
 	gl.glActiveTexture(gl[self.texunit]) --make sure we affect the right texture unit...
 	gl.glBindTexture( self.target, self.texture )
+	return self.texunitIdx
 end
 
 function Texture:buffer(img)
@@ -79,6 +76,8 @@ function Texture:buffer(img)
 	self:unbind()
 	self.width = img.width
 	self.height = img.height
+	print("image buffered to texture", img, img.width, img.height)
+	return self
 end
 
 return Texture
