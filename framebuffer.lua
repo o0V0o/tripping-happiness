@@ -59,10 +59,6 @@ function Framebuffer:calculateSize()
 	self.width = math.huge
 	self.height = math.huge
 	for target,object in pairs(self.attachments) do
-		print("FBO", object.width, object)
-		for k,v in pairs(object) do
-			print(k,v)
-		end
 		self.width = math.min(self.width, object.width)
 		self.height = math.min(self.height, object.height)
 	end

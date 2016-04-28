@@ -45,43 +45,57 @@ function V.Vector(dim,...)
 	return Vector(table.unpack(params) )
 end
 
-function Vector.__init(self,...)
-	self.usrdata = ctypes.floatArray({...})
-	self.dim = #{...}
+function Vector.__init(self,usrdata,...)
+	if type(usrdata)=="userdata" then
+		print("!", type(usrdata))
+		self.usrdata = usrdata
+		self.dim = #usrdata
+	else
+		self.usrdata = ctypes.floatArray({usrdata,...})
+		self.dim = #{usrdata,...}
+	end
 end
 
-function Vector:add(v)
+function Vector:add(v,result)
+	result = result or self
 	local usrdata = self.usrdata
 	local usrdata2 = v.usrdata
+	local resultdata = result.usrdata
 	for i = 0,self.dim-1 do
-		usrdata[i] = usrdata[i] + usrdata2[i]
+		resultdata[i] = usrdata[i] + usrdata2[i]
 	end
-	return self
+	return result
 end
 
-function Vector:sub(v)
+function Vector:sub(v, result)
+	result = result or self
 	local usrdata = self.usrdata
 	local usrdata2 = v.usrdata
+	local resultdata = result.usrdata
 	for i = 0,self.dim-1 do
-		usrdata[i] = usrdata[i] - usrdata2[i]
+		resultdata[i] = usrdata[i] - usrdata2[i]
 	end
-	return self
+	return result
 end
 
-function Vector:scale(s)
+function Vector:scale(s, result)
+	result = result or self
 	local usrdata = self.usrdata
+	local resultdata = result.usrdata
 	for i = 0,self.dim-1 do
-		usrdata[i] = usrdata[i] * s
+		resultdata[i] = usrdata[i] * s
 	end
-	return self
+	return result
 end
 
-function Vector:divide(s)
+function Vector:divide(s, result)
+	result = result or self
 	local usrdata = self.usrdata
+	local resultdata = result.usrdata
 	for i = 0,self.dim-1 do
-		usrdata[i] = usrdata[i] / s
+		resultdata[i] = usrdata[i] / s
 	end
-	return self
+	return result
 end
 
 function Vector:dot(v)
@@ -94,25 +108,29 @@ function Vector:dot(v)
 	return product
 end
 
-function Vector:cross(v)
+function Vector:cross(v, result)
+	result = result or self
 	assert(v.dim == 3 and self.dim == 3, "cross product only works in 3 dimensions!")
 	local v1 = self.usrdata
 	local v2 = v.usrdata
+	local r = result.usrdata
 	local cross1 = v1[1]*v2[2] - v1[2]*v2[1]
 	local cross2 = v1[2]*v2[0] - v1[0]*v2[2]
 	local cross3 = v1[0]*v2[1] - v1[1]*v2[0]
-	v1[0] = cross1
-	v1[1] = cross2
-	v1[2] = cross3
-	return self
+	r[0] = cross1
+	r[1] = cross2
+	r[2] = cross3
+	return result
 end
 
-function Vector:negate()
+function Vector:negate(result)
+	result = result or self
 	local usrdata = self.usrdata
+	local resultdata = result.usrdata
 	for i = 0,self.dim-1 do
-		usrdata[i] = -usrdata[i]
+		resultdata[i] = -usrdata[i]
 	end
-	return self
+	return result
 end
 
 function Vector:len()
@@ -125,13 +143,15 @@ function Vector:len()
 end
 Vector.length = Vector.len
 
-function Vector:normalize()
+function Vector:normalize(result)
+	result = result or self
 	local usrdata = self.usrdata
+	local resultdata = result.usrdata
 	local len = self:len()
 	for i = 0,self.dim-1 do
-		usrdata[i] = usrdata[i]/len
+		resultdata[i] = usrdata[i]/len
 	end
-	return self
+	return result
 end
 
 function Vector:swizzle(str)
@@ -173,7 +193,8 @@ function Vector.__mul(v1,v2)
 	elseif type(v2) == "number" then
 		return (v1:copy()):scale(v2)
 	else
-		error("Vector multiplication on incompatible types")
+		error("invalid types for vector multiplication")
+		return nil --no way to do this multiplication.
 	end
 end
 function Vector.__eq(v1, v2)
@@ -197,18 +218,23 @@ function Vector.__tostring(v)
 end
 
 function V.cross(v1,v2)
+	print("Vector.cross is deprecated")
 	return v1:copy():cross(v2)
 end
 function V.dot(v1,v2)
+	print("Vector.dot is deprecated")
 	return v1:dot(v2)
 end
 function V.add(v1,v2)
+	print("Vector.add is deprecated")
 	return v1:copy():add(v2)
 end
 function V.sub(v1,v2)
+	print("Vector.sub is deprecated")
 	return v1:copy():sub(v2)
 end
 function V.mult(v1,v2)
+	print("Vector.mult is deprecated")
 	if type(v1)=='number' then
 		return (v2:copy()):scale(v1)
 	elseif type(v2)=='number' then
@@ -217,4 +243,5 @@ function V.mult(v1,v2)
 		error("attempt to multiply incompatable types")
 	end
 end
+V.VectorClass = Vector
 return V

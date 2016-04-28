@@ -24,19 +24,18 @@ end
 function O:recalculate(shader, attributeMap)
 	attributeMap = attributeMap or defaultMap
 	self.attributeMap = attributeMap
-	print("calculating", self)
 	self.vbos = {}
 	self.eab = EAB()
 	for name,attribute in pairs(shader.attributes) do
 		local mesh_attrib = attributeMap[name]
 		assert(mesh_attrib, "no mapping for attribute")
 		local data = self.mesh.attributes[mesh_attrib]
-		assert(data and #data>0, "no such attribute in mesh")
+		--print("attribute:",name, mesh_attrib, #data, #self.mesh.indices)
+		assert((data and #data>0) or #self.mesh.indices==0, "no such attribute in mesh")
 		self.vbos[mesh_attrib] = VBO(gl.GL_FLOAT, gl.GL_STATIC_DRAW)
 		self.vbos[mesh_attrib]:bufferData( ctypes.floatArray( flatten(data)) )
 	end
 	self.eab:bufferData( ctypes.shortArray( self.mesh.indices ) )
-	print("calculated.")
 	return self
 end
 function O:draw(shader)
@@ -49,6 +48,7 @@ function O:draw(shader)
 		end
 	end
 	gl.drawElements( gl.GL_TRIANGLES, #(self.mesh.indices) , self.eab.datatype, 0)
+	self.eab:unbind()
 end
 
 return O

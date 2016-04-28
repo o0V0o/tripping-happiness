@@ -4,7 +4,6 @@ local VBO = require('vbo')
 
 local EAB = class(VBO)
 function EAB.__init(self, hints)
-	print(self.super, EAB)
 	VBO.__init(self, gl.GL_UNSIGNED_SHORT, hints)
 	--self:super(gl.GL_UNSIGNED_INT, hints)
 	self.target = gl.GL_ELEMENT_ARRAY_BUFFER

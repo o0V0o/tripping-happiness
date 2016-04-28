@@ -25,6 +25,7 @@ function Shader:__newindex(key, value)
 	if self.uniforms and self.uniforms[key] then
 		self.uniformValues[key] = value
 		if self:active() then
+			assert(value, "can't set uniform to nil!")
 			self.uniforms[key]:set(value)
 		end
 	elseif self.loaded then
@@ -41,7 +42,7 @@ function Shader:use()
 			self.uniforms[key]:set(value)
 	end
 	for _,attribute in pairs(self.attributes) do
-		print("enabling shader attribute", attribute.name)
+		--print("enabling shader attribute", attribute.name)
 		gl.enableVertexAttribArray( attribute.idx )
 	end
 end

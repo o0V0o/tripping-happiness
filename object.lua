@@ -1,12 +1,19 @@
-local Object = {}
-local metamethods = { -- all metamethods except __index
-  '__add', '__call', '__concat', '__div', '__le', '__lt', '__mod', '__mul', '__pow', '__sub', '__tostring', '__unm', '__len'
+--[[
+--		object.lua
+--
+--		provides an OOP implementation for lua, written in lua, that uses
+--		classic heirarchical single inheritance via metatables. 
+--
+--]]
+local Object = {} --make a place to store functions
+local metamethods = { -- all metamethods except __index that we wish to inherit.
+  '__add', '__call', '__concat', '__div', '__le', '__lt', '__mod', '__mul', '__pow', '__sub', '__tostring', '__unm', '__len', '__ipairs', '__pairs'
 } 
 --function Object.class( parent, [getter], [setter] ) return Class a new Class object. When called, a Class object returns an instance of that object. 
 function Object.class( parent ,getter, setter)
-	local class = {}
-	local objMt = class
-	local classMt = {}
+	local class = {}	--class object
+	local objMt = class	--the metatable for new instances of this class
+	local classMt = {}	--the metatable for the class
 	if parent then
 		-- in order to inherit meamethods, we have to create stub functions that will look up the metamethod in its parent.
 		-- otherwise, the metamethod is not inherited, as metamethods are aquired through an equivalent of rawget(...).
@@ -48,6 +55,9 @@ function Object.class( parent ,getter, setter)
 	else
 		objMt.__index = class
 	end
+	-- store some info about the class heirarchy for instanceof checks.
+	objMt.class = class
+	objMt.parent = parent
 
 
 	-- setup the __call metamethod to create a new object, and use the clase's __init constructor.

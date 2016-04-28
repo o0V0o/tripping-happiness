@@ -250,13 +250,6 @@ function Mesh:__init(ind, attributes)
 	self.verts = attributes.position
 	self.indices = ind
 	self.attributes = attributes or {}
-	--[[
-	if self.verts[1].dim == 3 then
-		for k,v in pairs(self.verts) do
-			self.verts[k] = V.vec4( v, 1) -- add W component.
-		end
-	end
-	--]]
 end
 function Mesh:attributeDefault(name, default)
 	local oldAttrib = self.attributes[name] or {}

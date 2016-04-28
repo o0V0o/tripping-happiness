@@ -1,7 +1,9 @@
 local class = require('object')
 local v = require("vector")
 local vec3, dot, cross = v.vec3, v.dot, v.cross
-local mat4 = require('matrix').mat4
+local Matrix = require('matrix')
+local mat4 = Matrix.mat4
+--local mat4 = require('matrix').mat4
 
 local Q = class()
 

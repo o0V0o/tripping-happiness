@@ -27,9 +27,21 @@ end
 
 local setters = {
 	[gl.GL_FLOAT]=function(self,v) gl.glUniform1f(self.idx, v) end,
-	[gl.GL_FLOAT_VEC2]=function(self,v) gl.glUniform2fv(self.idx, ctypes.floatArray(v)) end,
-	[gl.GL_FLOAT_VEC3]=function(self,v) gl.glUniform3fv(self.idx, ctypes.floatArray(v)) end,
-	[gl.GL_FLOAT_VEC4]=function(self,v) gl.glUniform4fv(self.idx, ctypes.floatArray(v)) end,
+	[gl.GL_FLOAT_VEC2]=function(self,v)
+		local data = v.usrdata or ctypes.floatArray(v)
+		--js.global.console:log(2,data, type(data))
+		gl.glUniform2fv(self.idx, data)
+	end,
+	[gl.GL_FLOAT_VEC3]=function(self,v)
+		local data = v.usrdata or ctypes.floatArray(v)
+		--js.global.console:log(3,data, type(data))
+		gl.glUniform3fv(self.idx, ctypes.floatArray(v))
+	end,
+	[gl.GL_FLOAT_VEC4]=function(self,v)
+		local data = v.usrdata or ctypes.floatArray(v)
+		--js.global.console:log(4,data, type(data))
+		gl.glUniform4fv(self.idx, ctypes.floatArray(v))
+	end,
 
 	[gl.GL_INT]=function(self,v) gl.glUniform1i(self.idx, v) end,
 	[gl.GL_INT_VEC2]=function(self,v) gl.glUniform2iv(self.idx, ctypes.intArray(v)) end,

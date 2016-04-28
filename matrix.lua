@@ -1,6 +1,6 @@
-
 local class = require'object'
 local ctypes = require'ctypes'
+local Vector = require'vector'.VectorClass
 
 local M = {}
 
@@ -22,6 +22,8 @@ function M.identity(dim)
 		usrdata[ (i*dim) +i ] = 1.0
 	end
 	return M
+end
+function M.basis(x,y,z,origin)
 end
 function M.lookat(eye, at, up)
 	local v = (at-eye):normalize()
@@ -68,20 +70,20 @@ function M.perspective(near, far, aspect, fov)
 	return self
 end
 
-function Matrix:__init(dim1, dim2)
-	assert(dim1 and dim2, "Matrix.new: not enough dimensions given")
-	self.usrdata = ctypes.floatArray( dim1*dim2 )
+function Matrix:__init(col, row, usrdata)
+	assert(col and row, "Matrix.new: not enough dimensions given")
+	self.usrdata = usrdata or  ctypes.floatArray( col*row )
 	           --col, row
-	self.dim = {dim1,dim2}
+	self.dim = {col,row}
 end
 function Matrix:index(col,row)
 	local nrows = self.dim[2]
-	col = col - 1; row = row - 1
+	col = col - 1; row = row - 1 --adjust to 0-based indexing
 	return (col*nrows)+row
 end
 
 function Matrix:transform(transformation)
-	local new = self * transformation
+	local new = transformation * self
 	self.usrdata = new.usrdata
 	return self
 end
@@ -257,22 +259,35 @@ function Matrix:sub(m2)
 end
 
 function Matrix.mult(m1,m2)
-	assert(m1.dim[2] == m2.dim[1], "Multiplication with invalid matrix sizes")
+	assert(m1.dim and m2.dim, "Multiplication with invalid types")
+	local vector = false --don't return a vector...
+	if type(m1.dim) == "number" then --aka a vector
+		m1 = Matrix(m1.dim, 1, m1.usrdata) --promote it to a matrix!
+		vector = true
+	elseif type(m2.dim) == "number" then --aka a vector
+		m2 = Matrix(1,m2.dim, m2.usrdata) --promote it to a matrix!
+		vector = true
+	end
+
+	assert(m1.dim[1] == m2.dim[2], "Multiplication with invalid matrix sizes")
 	local d1 = m1.usrdata
 	local d2= m2.usrdata
-	local m = Matrix(m1.dim[1], m2.dim[2])
+	local m = Matrix(m2.dim[1], m1.dim[2])
 	local mdata = m.usrdata
-	local d1cols = m1.dim[2]
-	local d2cols = m2.dim[2]
-	local cols = m.dim[2]
-	for i = 0,m.dim[1]-1 do
-		for j = 0,m.dim[2]-1 do
+	local d1cols = m1.dim[1]
+	local d2cols = m2.dim[1]
+	local cols = m.dim[1]
+	for r = 1,m.dim[2] do
+		for c = 1,m.dim[1] do
 			local v = 0
-			for n = 0,m1.dim[2]-1 do
-				v = v + d1[(i*d1cols)+n] * d2[(n*d2cols)+j]
+			for n = 1,m1.dim[1] do
+				v = v + d1[m1:index(n,r)] * d2[m2:index(c,n)]
 			end
-			mdata[(i*cols)+j] = v
+			mdata[m:index(c,r)] = v
 		end
+	end
+	if vector then
+		m = Vector(mdata)
 	end
 	return m
 end
@@ -313,12 +328,13 @@ function Matrix.__tostring(self)
 	table.insert(t, "x")
 	table.insert(t, tostring(self.dim[2]))
 	table.insert(t, ":")
-	for row = 0,self.dim[2]-1 do
+	for row = 1,self.dim[2] do
 		table.insert(t,"\n")
 		table.insert(t, "|")
-		for col = 0,self.dim[1]-1 do
-			if col>0 then table.insert(t, ",\t") end
-			table.insert(t, string.format("%.3f", usrdata[(col*nrows)+row]))
+		for col = 1,self.dim[1] do
+			if col>1 then table.insert(t, ",\t") end
+			--table.insert(t, string.format("%.3f", usrdata[(col*nrows)+row]))
+			table.insert(t, string.format("%.3f", usrdata[ self:index(col, row) ]))
 		end
 		table.insert(t, "|")
 	end

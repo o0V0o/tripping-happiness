@@ -13,6 +13,8 @@ local function getContext(canvas)
 	local glObj = canvas:getContext("webgl") or canvas:getContext("experimental-webgl")
 	assert(glObj, "could not get openGL context")
 
+	canvas.width = canvas.clientWidth
+	canvas.height = canvas.clientHeight
 	glObj.viewportWidth = canvas.width
 	glObj.viewportHeight = canvas.height
 
@@ -96,4 +98,4 @@ local function getContext(canvas)
 	return context[canvas]
 end
 
-return getContext(canvas)
+return getContext()
