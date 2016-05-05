@@ -47,7 +47,6 @@ end
 
 function Vector.__init(self,usrdata,...)
 	if type(usrdata)=="userdata" then
-		print("!", type(usrdata))
 		self.usrdata = usrdata
 		self.dim = #usrdata
 	else

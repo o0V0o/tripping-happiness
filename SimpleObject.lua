@@ -32,7 +32,7 @@ function O:recalculate(shader, attributeMap)
 		local data = self.mesh.attributes[mesh_attrib]
 		--print("attribute:",name, mesh_attrib, #data, #self.mesh.indices)
 		assert((data and #data>0) or #self.mesh.indices==0, "no such attribute in mesh")
-		self.vbos[mesh_attrib] = VBO(gl.GL_FLOAT, gl.GL_STATIC_DRAW)
+		self.vbos[mesh_attrib] = VBO(gl.GL_FLOAT, gl.GL_STREAM_DRAW)
 		self.vbos[mesh_attrib]:bufferData( ctypes.floatArray( flatten(data)) )
 	end
 	self.eab:bufferData( ctypes.shortArray( self.mesh.indices ) )

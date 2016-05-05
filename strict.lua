@@ -2,11 +2,16 @@
 --global access. 
 local g = _G
 
+--ensure we have a traceback function.
+local traceback = (debug and debug.traceback) or function() return "..." end
 _G = setmetatable(g, {
 	__index=function(t,k)
-		error("accessing global variable "..k)
+		local stacktrace = "\n"..traceback()
+		error("accessing global variable "..k..stacktrace)
 	end,
 	__newindex=function(t,k,v)
 		rawset(t,k,v)
-		error("using global variable "..k)
-	end})
+		local stacktrace = "\n"..traceback()
+		error("using global variable "..k..stacktrace)
+	end
+})

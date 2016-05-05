@@ -1,6 +1,6 @@
 local class = require('object')
 local v = require("vector")
-local vec3, dot, cross = v.vec3, v.dot, v.cross
+local vec3, vec4 = v.vec3, v.vec4
 local Matrix = require('matrix')
 local mat4 = Matrix.mat4
 --local mat4 = require('matrix').mat4
@@ -77,10 +77,41 @@ function Q.axisAngle(axis, angle)
 	return Q(axis:copy():normalize()*math.sin(angle/2), math.cos(angle/2))
 end
 
+--assumes v1 and v2 are normalized
+function Q.orient(v1, v2)
+	local v3 = (v1+v2):normalize()
+	local real = v3:dot(v1)
+	local imaginary = v3:cross(v1)
+	return Q(imaginary, real)
+end
+
+function Q.multVector(q,v,c) 
+	--local t = vec3()
+	--q.imaginary:cross(v,t)
+	--local t2 = vec3()
+	--local t = q.imaginary:cross(t,t2)
+	--return v + q.real + t + cross(q.imaginary, t)
+
+	local mat = q:matrix()
+	return mat.mult(v.xyzx, mat).xyz
+end
 function Q.mult(a,b,c)
+	if type(b.dim)=='number' then
+		return a:multVector(b,c)
+	end
+
 	if not c then c=Q() end
-	local real = (a.real*b.real - dot(a.imaginary,b.imaginary))
-	local imaginary = a.real*b.imaginary + b.real*a.imaginary + cross(a.imaginary,b.imaginary)
+	--local real = (a.real*b.real - dot(a.imaginary,b.imaginary))
+	local real = (a.real*b.real - a.imaginary:dot(b.imaginary))
+	--local imaginary = a.real*b.imaginary + b.real*a.imaginary + cross(a.imaginary,b.imaginary)
+	local imaginary = vec3()
+	local tmp = vec3()
+	b.imaginary:scale(a.real, imaginary)
+	a.imaginary:scale(b.real, tmp)
+	imaginary:add(tmp)
+	a.imaginary:cross(b.imaginary, tmp)
+	imaginary:add(tmp)
+
 	c.real = real
 	c.imaginary = imaginary
 	return c
