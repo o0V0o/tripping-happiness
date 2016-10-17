@@ -27,7 +27,7 @@ local gl = require("openGL")
 local shader = Shader("shaders/textured.vs", "shaders/textured.fs")
 
 
-local cubemesh = M.load("cube.obj")
+--local cubemesh = M.load("cube.obj")
 local monkeymesh = M.load("suzanne.obj")
 --local monkeymesh = M.load("suzanne-cubemap.obj")
 --local monkeymesh = M.load("suzanne-cylindermap.obj")
@@ -38,7 +38,7 @@ local attributeMap = {
 	vTex = "texcoord"
 }
 
-local cube = SimpleObject( cubemesh )
+--local cube = SimpleObject( cubemesh )
 local monkey = SimpleObject( monkeymesh )
 
 local update
@@ -54,7 +54,7 @@ shader:use()
 gl.glClearColor(1,1,1,1)
 G:clear()
 
-cube:recalculate(shader, attributeMap)
+--cube:recalculate(shader, attributeMap)
 monkey:recalculate(shader, attributeMap)
 
 shader.color = {1,0,0} --set color to red.
