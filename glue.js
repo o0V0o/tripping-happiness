@@ -59,3 +59,4 @@ jsFloat32Array = function(table){
 	var floatArray = new Float32Array(array);
 	return floatArray
 }
+nullValue = null

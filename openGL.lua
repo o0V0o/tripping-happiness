@@ -10,8 +10,9 @@ local function getContext(canvas)
 		canvas = js.global.document:getElementById(canvas)
 	end
 
-	local glObj = canvas:getContext("webgl") or canvas:getContext("experimental-webgl")
-	assert(glObj, "could not get openGL context")
+	local glObj = canvas:getContext("webgl")
+	if glObj == js.global.nullValue then contextObj = canvas:getContext("experimental-webgl") end
+	assert(glObj ~= js.global.nullValue, "could not get openGL context")
 
 	canvas.width = canvas.clientWidth
 	canvas.height = canvas.clientHeight
