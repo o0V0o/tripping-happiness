@@ -43,9 +43,11 @@ local monkey = SimpleObject( monkeymesh )
 
 local update
 local t = Texture()
+oldprint("HELLO!")
+for k,v in pairs(Texture) do oldprint(k,v) end
 local img = Image('cactuar.gif', function(img)
 	t:buffer(img)
-	t:activate()
+	t:bind()
 end)
 
 
@@ -90,7 +92,7 @@ function update()
 	m:rotate( up, 0.05 )
 	shader.model = m
 	shader.perspective = Matrix.perspective(0.1,100,gl.canvas.clientWidth/gl.canvas.clientHeight,45)
-	shader.diffuseTexture = t:activate()
+	shader.diffuseTexture = t:bind()
 
 	--shader.mvpMatrix = m*v --reset uniform
 	shader.model = m
