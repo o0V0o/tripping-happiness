@@ -59,6 +59,9 @@ function Object.class( parent ,getter, setter)
 	objMt.class = class
 	objMt.parent = parent
 
+	for _,metamethod in pairs(metamethods) do
+		objMt[metamethod] = class[metamethod]
+	end
 
 	-- setup the __call metamethod to create a new object, and use the clase's __init constructor.
 	function classMt.__call(class,...)
